@@ -1,18 +1,18 @@
 package com.main.frotaFrontEnd.controller;
 
-import com.main.frotaFrontEnd.model.UserRequestDTO;
 import com.main.frotaFrontEnd.service.ApiService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import tools.jackson.databind.ObjectMapper;
+
+import java.util.Map;
 
 @Controller
 public class AuthController {
@@ -21,61 +21,83 @@ public class AuthController {
 
     @GetMapping("/")
     public String home(HttpSession session) {
-        if (session.getAttribute("token") != null) {
-            return "redirect:/dashboard";
-        }
+        if (session.getAttribute("token") != null) return "redirect:/dashboard";
         return "home";
     }
 
     @GetMapping("/dashboard")
-    public String dashboard(HttpSession session) {
-        if (session.getAttribute("token") == null) {
-            return "redirect:/login";
-        }
+    public String dashboard(HttpSession session, Model model) {
+        if (session.getAttribute("token") == null) return "redirect:/login";
+        model.addAttribute("perfil", session.getAttribute("role"));
+        model.addAttribute("nomeUsuario", session.getAttribute("nome"));
+        model.addAttribute("primeiroAcesso", session.getAttribute("primeiroAcesso"));
         return "dashboard";
     }
 
     @GetMapping("/login")
-    public String login(Model model) {
-        if (!model.containsAttribute("credenciais")) {
-            model.addAttribute("credenciais", new UserRequestDTO());
-        }
+    public String login() {
         return "login";
     }
 
     @PostMapping("/logar")
-    public String logar(@ModelAttribute("credenciais") UserRequestDTO credenciais, BindingResult result, RedirectAttributes redirectAttributes, HttpSession session) {
-        if (result.hasErrors()) {
-            return "login";
-        }
-
+    public String logar(@RequestParam String email, @RequestParam String senha, RedirectAttributes redirectAttributes, HttpSession session) {
         try {
-            String token = restService.logar(credenciais);
-
+            String token = restService.logar(email, senha);
             session.setAttribute("token", token);
             session.setAttribute("role", restService.extrairRole(token));
-            session.setAttribute("email", credenciais.getEmail());
-
-            String nome = restService.extrairNome(token);
-            session.setAttribute("nome", nome != null ? nome : credenciais.getEmail().split("@")[0]);
-
+            session.setAttribute("email", email);
+            session.setAttribute("primeiroAcesso", restService.extrairPrimeiroAcesso(token));
+            session.setAttribute("nome", restService.extrairNome(token));
             return "redirect:/dashboard";
-
         } catch (HttpStatusCodeException ex) {
             try {
-                String mensagem = new ObjectMapper()
-                        .readTree(ex.getResponseBodyAsString())
-                        .get("message").asText();
-                redirectAttributes.addFlashAttribute("errorMessage", mensagem);
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        new ObjectMapper().readTree(ex.getResponseBodyAsString()).get("message").asText());
             } catch (Exception e) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Ocorreu um erro inesperado na comunicação.");
+                redirectAttributes.addFlashAttribute("errorMessage", "Erro inesperado na comunicação.");
             }
-            redirectAttributes.addFlashAttribute("credenciais", credenciais);
             return "redirect:/login";
-
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
             return "redirect:/login";
+        }
+    }
+
+    @GetMapping("/logout")
+    public String logout(HttpSession session) {
+        session.invalidate();
+        return "redirect:/login";
+    }
+
+    @GetMapping("/api/autenticar/verificar-email")
+    @ResponseBody
+    public ResponseEntity<Map<String, Boolean>> verificarEmail(@RequestParam("email") String email) {
+        try {
+            return ResponseEntity.ok(restService.verificarEmail(email));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of("disponivel", true));
+        }
+    }
+
+    @PostMapping("/api/alterar-senha")
+    @ResponseBody
+    public ResponseEntity<String> alterarSenha(@RequestBody Map<String, String> body, HttpSession session) {
+        String token = (String) session.getAttribute("token");
+        if (token == null) return ResponseEntity.status(401).body("Sessão expirada.");
+        try {
+            restService.alterarSenha(body.get("senha"), token);
+            session.setAttribute("primeiroAcesso", "false");
+            return ResponseEntity.ok("Senha alterada com sucesso.");
+        } catch (HttpStatusCodeException ex) {
+            String msg;
+            try {
+                msg = new ObjectMapper().readTree(ex.getResponseBodyAsString()).get("message").asText();
+            } catch (Exception e) {
+                msg = "Erro ao alterar senha.";
+            }
+            return ResponseEntity.status(ex.getStatusCode()).body(msg);
+        } catch (Exception ex) {
+            return ResponseEntity.status(500).body("Erro inesperado.");
         }
     }
 }

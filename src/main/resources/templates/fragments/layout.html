@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <th:block th:fragment="head-content">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        <link th:href="@{/css/agrotrack.css}" rel="stylesheet">
+    </th:block>
+</head>
+<body>
+<aside th:fragment="sidebar" class="at-sidebar" id="atSidebar" aria-label="Menu de navegação">
+    <a th:href="@{/dashboard}" class="at-sidebar-brand">
+        <span class="at-sidebar-brand-text">Agro<span>Track</span></span>
+    </a>
+    <nav class="at-sidebar-nav">
+        <ul style="list-style:none;padding:0;margin:0;">
+            <li class="at-nav-item">
+                <a th:href="@{/dashboard}" class="at-nav-link" id="nav-dashboard">
+                    <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+                </a>
+            </li>
+            <li><p class="at-nav-label">Frota</p></li>
+            <li class="at-nav-item">
+                <a href="#" class="at-nav-link" id="nav-maquinas"><i class="bi bi-truck"></i><span>Máquinas</span></a>
+            </li>
+            <li class="at-nav-item">
+                <a href="#" class="at-nav-link" id="nav-operacoes"><i class="bi bi-activity"></i><span>Operações</span></a>
+            </li>
+            <li class="at-nav-item">
+                <a href="#" class="at-nav-link" id="nav-abastecimento"><i class="bi bi-fuel-pump"></i><span>Abastecimentos</span></a>
+            </li>
+            <li><p class="at-nav-label">Manutenção</p></li>
+            <li class="at-nav-item">
+                <a href="#" class="at-nav-link" id="nav-ordens"><i class="bi bi-wrench-adjustable"></i><span>Ordens de Manutenção</span></a>
+            </li>
+            <li class="at-nav-item">
+                <a href="#" class="at-nav-link" id="nav-notificacoes">
+                    <i class="bi bi-bell"></i><span>Notificações</span><span class="at-nav-badge">3</span>
+                </a>
+            </li>
+            <li th:if="${session.role == 'PROPRIETARIO'}"><p class="at-nav-label">Administração</p></li>
+            <li th:if="${session.role == 'PROPRIETARIO'}" class="at-nav-item">
+                <a th:href="@{/novo-colaborador}" class="at-nav-link" id="nav-colaborador">
+                    <i class="bi bi-person-plus"></i><span>Cadastrar Colaborador</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    <div class="at-sidebar-footer">
+        <div class="at-sidebar-user-name" th:text="${session.nome ?: 'Usuário'}">Usuário</div>
+        <div class="at-sidebar-user-role" th:text="${session.role == 'PROPRIETARIO' ? 'Proprietário' : 'Operador'}">Operador</div>
+    </div>
+</aside>
+<header th:fragment="topbar(pageTitle)" class="at-topbar">
+    <button class="at-topbar-toggle" id="sidebarToggle" aria-label="Abrir menu"><i class="bi bi-list"></i></button>
+    <span class="at-topbar-title" th:text="${pageTitle}">AgroTrack</span>
+    <div class="at-topbar-spacer"></div>
+    <div class="at-topbar-user">
+        <i class="bi bi-person-circle"></i>
+        <span th:text="${session.nome ?: 'Usuário'}">Usuário</span>
+        <span class="at-topbar-role" th:text="${session.role == 'PROPRIETARIO' ? '(Proprietário)' : '(Operador)'}">(Operador)</span>
+        <a th:href="@{/logout}" class="at-topbar-logout" title="Sair"><i class="bi bi-box-arrow-right"></i></a>
+    </div>
+</header>
+<footer th:fragment="footer" class="at-footer">
+    <span>&copy; 2026 <strong>AgroTrack</strong></span>
+    <span>v1.0.0</span>
+</footer>
+<th:block th:fragment="scripts">
+    <input type="hidden" id="toast-success-message" th:if="${mensagemSucesso != null}" th:value="${mensagemSucesso}" />
+    <input type="hidden" id="toast-error-message" th:if="${mensagemErro != null}" th:value="${mensagemErro}" />
+    <script th:src="@{/script.js}"></script>
+</th:block>
+</body>
+</html>
