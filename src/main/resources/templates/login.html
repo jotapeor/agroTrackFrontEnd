@@ -1,23 +1,48 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>AgroTrack - Login</title>
+    <title>AgroTrack — Login</title>
+    <link rel="icon" type="image/png" th:href="@{/icon.png}">
+    <th:block th:replace="~{fragments/layout :: head-content}"></th:block>
 </head>
 <body>
-<div>
-    <h1>Login</h1>
-    <form action="/logar" method="post">
-        <div>
-            <label for="email">E-mail</label>
-            <input type="email" id="email" name="email" required/>
+<div class="at-login-page">
+    <div class="at-login-visual">
+        <span class="at-login-logo-text">Agro<span>Track</span></span>
+        <p class="at-login-tagline">Gestão de máquinas e frota agrícola para sua propriedade.</p>
+    </div>
+    <div class="at-login-panel">
+        <div class="at-login-box">
+            <h1 class="at-login-title">Entrar</h1>
+            <p class="at-login-subtitle">Acesse o painel com seus dados</p>
+            <div th:if="${errorMessage}" class="at-alert at-alert-danger" role="alert">
+                <i class="bi bi-exclamation-circle"></i>
+                <span th:text="${errorMessage}">Credenciais inválidas.</span>
+            </div>
+            <form action="/logar" method="post" id="formLogin" novalidate>
+                <div class="at-form-group">
+                    <label class="at-form-label" for="email">E-mail <span class="required">*</span></label>
+                    <div class="at-input-wrapper">
+                        <i class="bi bi-envelope at-input-icon"></i>
+                        <input type="email" id="email" name="email" class="at-form-control" placeholder="usuario@fazenda.com.br" autocomplete="email" required />
+                    </div>
+                </div>
+                <div class="at-form-group">
+                    <label class="at-form-label" for="senha">Senha <span class="required">*</span></label>
+                    <div class="at-input-wrapper">
+                        <i class="bi bi-lock at-input-icon"></i>
+                        <input type="password" id="senha" name="senha" class="at-form-control" placeholder="Senha" autocomplete="current-password" required />
+                        <button type="button" class="at-input-action" onclick="toggleSenha(this)" aria-label="Mostrar ou ocultar senha">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" id="btn-logar" class="btn btn-primary btn-block btn-lg" style="margin-top:8px;" disabled>Entrar</button>
+            </form>
         </div>
-        <div>
-            <label for="senha">Senha</label>
-            <input type="password" id="senha" name="senha" required/>
-        </div>
-        <button type="submit">Entrar</button>
-    </form>
+    </div>
 </div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
 </body>
 </html>

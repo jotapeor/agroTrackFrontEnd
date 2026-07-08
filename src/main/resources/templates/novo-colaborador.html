@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <title>AgroTrack — Cadastrar Colaborador</title>
+    <meta charset="UTF-8">
+    <meta name="description" content="AgroTrack — Cadastrar novo colaborador.">
+    <link rel="icon" type="image/png" th:href="@{/icon.png}">
+    <th:block th:replace="~{fragments/layout :: head-content}"></th:block>
+</head>
+<body>
+<div class="at-sidebar-overlay" id="sidebarOverlay"></div>
+<div class="at-wrapper">
+    <div th:replace="~{fragments/layout :: sidebar}"></div>
+    <div class="at-main">
+        <div th:replace="~{fragments/layout :: topbar('Cadastrar Colaborador')}"></div>
+        <main class="at-content" id="main-content">
+            <div class="at-page-header">
+                <h1 class="at-page-title">Cadastrar Novo Colaborador</h1>
+                <p class="at-page-subtitle">
+                    Preencha os dados para criar um novo acesso ao sistema.
+                </p>
+            </div>
+            <div th:if="${errorMessage}"
+                 class="at-alert at-alert-danger" role="alert">
+                <i class="bi bi-exclamation-circle"></i>
+                <div>
+                    <strong>Erro ao cadastrar</strong><br>
+                    <span th:text="${errorMessage}">Mensagem de erro.</span>
+                </div>
+            </div>
+            <div th:if="${mensagemSucesso}"
+                 class="at-alert at-alert-success" role="alert">
+                <i class="bi bi-check-circle"></i>
+                <div>
+                    <strong>Sucesso!</strong><br>
+                    <span th:text="${mensagemSucesso}">Colaborador cadastrado.</span>
+                </div>
+            </div>
+            <div style="max-width: 640px;">
+                <div class="at-card">
+                    <div class="at-card-header">
+                        <h2 class="at-card-title">Dados do Colaborador</h2>
+                        <span class="at-badge at-badge-warning" style="font-size:.7rem;">Proprietário</span>
+                    </div>
+                    <div class="at-card-body">
+                        <form th:action="@{/novo-colaborador}"
+                              th:object="${userDTO}"
+                              method="post"
+                              novalidate
+                              id="form-novo-colaborador">
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="nome">
+                                    Nome completo <span class="required">*</span>
+                                </label>
+                                <input
+                                        type="text"
+                                        id="nome"
+                                        name="nome"
+                                        th:field="*{nome}"
+                                        class="at-form-control"
+                                        placeholder="Nome completo"
+                                        minlength="3"
+                                        required
+                                />
+                                <span class="at-form-hint" id="nome-hint">Mínimo 3 caracteres.</span>
+                                <span class="at-form-error" id="nome-error" style="display:none;"></span>
+                            </div>
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="email">
+                                    E-mail <span class="required">*</span>
+                                </label>
+                                <input
+                                        type="email"
+                                        id="email"
+                                        name="email"
+                                        th:field="*{email}"
+                                        class="at-form-control"
+                                        placeholder="usuario@fazenda.com.br"
+                                        required
+                                />
+                                <span class="at-form-hint" id="email-hint">Será usado para fazer login.</span>
+                                <span class="at-form-error" id="email-error" style="display:none;"></span>
+                                <span class="at-form-success" id="email-success" style="display:none;"></span>
+                            </div>
+                            <div class="at-grid at-grid-2" style="margin-bottom:0;">
+                                <div class="at-form-group">
+                                    <label class="at-form-label" for="senha">
+                                        Senha <span class="required">*</span>
+                                    </label>
+                                    <div class="at-input-wrapper">
+                                        <i class="bi bi-lock at-input-icon"></i>
+                                        <input
+                                                type="password"
+                                                id="senha"
+                                                name="senha"
+                                                th:field="*{senha}"
+                                                class="at-form-control"
+                                                placeholder="Mínimo 6 caracteres"
+                                                minlength="6"
+                                                required
+                                        />
+                                        <button type="button"
+                                                class="at-input-action"
+                                                onclick="toggleSenha(this)"
+                                                aria-label="Mostrar ou ocultar senha">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
+                                    <span class="at-form-hint" id="senha-hint">Mínimo 6 caracteres.</span>
+                                    <span class="at-form-error" id="senha-error" style="display:none;"></span>
+                                </div>
+                                <div class="at-form-group">
+                                    <label class="at-form-label" for="confirmar-senha">
+                                        Confirmar senha <span class="required">*</span>
+                                    </label>
+                                    <div class="at-input-wrapper">
+                                        <i class="bi bi-lock at-input-icon"></i>
+                                        <input
+                                                type="password"
+                                                id="confirmar-senha"
+                                                class="at-form-control"
+                                                placeholder="Repita a senha"
+                                                required
+                                        />
+                                    </div>
+                                    <span class="at-form-hint" id="confirmar-hint">Repita a senha digitada.</span>
+                                    <span class="at-form-error" id="confirmar-error" style="display:none;"></span>
+                                    <span class="at-form-success" id="confirmar-success" style="display:none;"></span>
+                                </div>
+                            </div>
+                            <div class="at-grid at-grid-2" style="margin-bottom:0;">
+                                <div class="at-form-group">
+                                    <label class="at-form-label" for="perfil">
+                                        Perfil de acesso <span class="required">*</span>
+                                    </label>
+                                    <select
+                                            id="perfil"
+                                            name="perfil"
+                                            th:field="*{perfil}"
+                                            class="at-form-control at-form-select"
+                                            required>
+                                        <option value="">Selecione</option>
+                                        <option value="OPERADOR">Operador</option>
+                                        <option value="PROPRIETARIO">Proprietário</option>
+                                    </select>
+                                    <span class="at-form-hint">Operador: padrão. Proprietário: acesso total.</span>
+                                </div>
+                                <div class="at-form-group">
+                                    <label class="at-form-label" for="ativo">
+                                        Status da conta
+                                    </label>
+                                    <select
+                                            id="ativo"
+                                            name="ativo"
+                                            class="at-form-control at-form-select">
+                                        <option value="true" selected>Ativo</option>
+                                        <option value="false">Inativo</option>
+                                    </select>
+                                    <span class="at-form-hint">Inativas não conseguem acessar.</span>
+                                </div>
+                            </div>
+                            <div class="at-alert at-alert-info" style="margin-top:12px; margin-bottom:20px;">
+                                <i class="bi bi-info-circle"></i>
+                                <span>
+                                    O colaborador acessa o sistema com e-mail e senha. A senha pode ser alterada após o primeiro login.
+                                </span>
+                            </div>
+                            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                                <button type="submit" class="btn btn-primary" id="btn-cadastrar">
+                                    <i class="bi bi-person-check"></i>
+                                    Cadastrar
+                                </button>
+                                <a th:href="@{/dashboard}" class="btn btn-ghost" id="btn-cancelar">
+                                    Cancelar
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <div th:replace="~{fragments/layout :: footer}"></div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

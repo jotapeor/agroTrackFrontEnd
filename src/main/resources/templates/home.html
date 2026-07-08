@@ -1,13 +1,230 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>AgroTrack - Home</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroTrack — Gestão Agrícola</title>
+    <meta name="description" content="AgroTrack — Sistema de gestão de máquinas, manutenções e operações para sua propriedade rural.">
+    <link rel="icon" type="image/png" th:href="@{/icon.png}">
+    <th:block th:replace="~{fragments/layout :: head-content}"></th:block>
+    <style>
+        /* Reset adicional para a home */
+        .home-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Hero Section */
+        .hero {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 60px 24px 40px;
+            background: linear-gradient(135deg, #0f1f17 0%, #1a3a2a 50%, #0f1f17 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 50%, rgba(22, 163, 74, .06) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 50%, rgba(74, 222, 128, .04) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 640px;
+        }
+
+        .hero-logo {
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -1.5px;
+            margin-bottom: 8px;
+        }
+
+        .hero-logo span {
+            color: #4ade80;
+        }
+
+        .hero-tagline {
+            font-size: 1.1rem;
+            color: rgba(167, 201, 183, .85);
+            line-height: 1.7;
+            margin: 0 auto 36px;
+            max-width: 480px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+        }
+
+        .hero-btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 13px 36px;
+            background: #16a34a;
+            color: #fff;
+            border: none;
+            font-family: inherit;
+            font-size: .95rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background .2s, transform .2s;
+        }
+
+        .hero-btn-primary:hover {
+            background: #15803d;
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        .hero-btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 13px 36px;
+            background: transparent;
+            color: rgba(167, 201, 183, .9);
+            border: 1px solid rgba(167, 201, 183, .25);
+            font-family: inherit;
+            font-size: .95rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background .2s, transform .2s, border-color .2s;
+        }
+
+        .hero-btn-secondary:hover {
+            background: rgba(255, 255, 255, .05);
+            border-color: rgba(167, 201, 183, .5);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        /* Features Section */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid rgba(255, 255, 255, .06);
+            padding: 24px 20px;
+            text-align: center;
+            transition: background .2s, border-color .2s, transform .2s;
+        }
+
+        .feature-card:hover {
+            background: rgba(255, 255, 255, .07);
+            border-color: rgba(74, 222, 128, .15);
+            transform: translateY(-3px);
+        }
+
+        .feature-icon {
+            font-size: 1.5rem;
+            color: #4ade80;
+            margin-bottom: 12px;
+        }
+
+        .feature-title {
+            font-size: .85rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+
+        .feature-desc {
+            font-size: .78rem;
+            color: rgba(167, 201, 183, .6);
+            line-height: 1.5;
+        }
+
+        /* Home Footer */
+        .home-footer {
+            text-align: center;
+            padding: 20px 24px;
+            background: #0a1710;
+            border-top: 1px solid rgba(255, 255, 255, .05);
+        }
+
+        .home-footer small {
+            color: rgba(167, 201, 183, .35);
+            font-size: .72rem;
+        }
+
+        /* Responsivo */
+        @media (max-width: 768px) {
+            .hero-logo { font-size: 2rem; }
+            .hero-tagline { font-size: .95rem; }
+            .features { grid-template-columns: 1fr; max-width: 400px; }
+            .hero-buttons { flex-direction: column; align-items: center; }
+            .hero-btn-primary, .hero-btn-secondary { width: 100%; max-width: 280px; justify-content: center; }
+        }
+    </style>
 </head>
 <body>
-<h1>AgroTrack - Home</h1>
-<div>
-    <a th:href="@{/login}">Fazer Login</a>
+<div class="home-page">
+    <section class="hero">
+        <div class="hero-content">
+            <h1 class="hero-logo">Agro<span>Track</span></h1>
+            <p class="hero-tagline">
+                Gestão inteligente de máquinas, manutenções e operações<br>
+                para sua propriedade rural.
+            </p>
+            <div class="hero-buttons">
+                <a th:href="@{/login}" class="hero-btn-primary">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    Acessar o Sistema
+                </a>
+            </div>
+
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-truck"></i></div>
+                    <div class="feature-title">Controle de Máquinas</div>
+                    <div class="feature-desc">Cadastre e acompanhe toda a sua frota agrícola em um só lugar.</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-wrench-adjustable"></i></div>
+                    <div class="feature-title">Ordens de Manutenção</div>
+                    <div class="feature-desc">Registre e gerencie manutenções preventivas e corretivas.</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-fuel-pump"></i></div>
+                    <div class="feature-title">Abastecimentos</div>
+                    <div class="feature-desc">Monitore o consumo de combustível e reduza custos operacionais.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="home-footer">
+        <small>&copy; 2026 <strong>AgroTrack</strong>. Todos os direitos reservados.</small>
+    </footer>
 </div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
 </body>
 </html>
