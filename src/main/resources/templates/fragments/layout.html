@@ -6,6 +6,32 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
         <link th:href="@{/css/agrotrack.css}" rel="stylesheet">
+        <style>
+            .at-nav-sublist { list-style:none; padding:0; margin:0; max-height:0; overflow:hidden; transition:max-height 0.25s ease; }
+            .at-nav-sublist.open { max-height:300px; }
+            .at-nav-sublist .at-nav-link { padding-left:42px; font-size:.8rem; white-space:nowrap; }
+            .at-nav-toggle { cursor:pointer; }
+            .at-nav-toggle .toggle-icon { transition:transform .2s; margin-left:auto; }
+            .at-nav-toggle.open .toggle-icon { transform:rotate(90deg); }
+
+            .at-sidebar:not(:hover) .at-nav-link.active,
+            .at-sidebar:not(:hover) .at-nav-sublist .at-nav-link.active { background:transparent !important; }
+
+            .confirm-modal-overlay {
+                position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex;
+                align-items:center; justify-content:center; z-index:2000; padding:20px;
+            }
+            .confirm-modal {
+                background:var(--at-surface); border:1px solid var(--at-border);
+                padding:24px; width:100%; max-width:400px; text-align:center;
+                animation:atModalIn .2s ease;
+            }
+            .confirm-modal-icon { font-size:2.5rem; color:var(--at-danger); margin-bottom:12px; }
+            .confirm-modal-title { font-size:1.1rem; font-weight:700; margin-bottom:4px; }
+            .confirm-modal-text { font-size:.85rem; color:var(--at-text-muted); margin-bottom:20px; }
+            .confirm-modal-actions { display:flex; gap:10px; justify-content:center; }
+            @keyframes atModalIn { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
+        </style>
     </th:block>
 </head>
 <body>
@@ -22,7 +48,7 @@
             </li>
             <li><p class="at-nav-label">Frota</p></li>
             <li class="at-nav-item">
-                <a href="#" class="at-nav-link" id="nav-maquinas"><i class="bi bi-truck"></i><span>Máquinas</span></a>
+                <a th:href="@{/maquinas}" class="at-nav-link" id="nav-maquinas"><i class="bi bi-truck"></i><span>Máquinas</span></a>
             </li>
             <li class="at-nav-item">
                 <a href="#" class="at-nav-link" id="nav-operacoes"><i class="bi bi-activity"></i><span>Operações</span></a>
@@ -41,8 +67,25 @@
             </li>
             <li th:if="${session.role == 'PROPRIETARIO'}"><p class="at-nav-label">Administração</p></li>
             <li th:if="${session.role == 'PROPRIETARIO'}" class="at-nav-item">
-                <a th:href="@{/novo-colaborador}" class="at-nav-link" id="nav-colaborador">
-                    <i class="bi bi-person-plus"></i><span>Cadastrar Colaborador</span>
+                <a class="at-nav-link at-nav-toggle" id="nav-toggle-cadastros">
+                    <i class="bi bi-plus-circle"></i><span>Cadastros</span><i class="bi bi-chevron-right toggle-icon"></i>
+                </a>
+                <ul class="at-nav-sublist" id="nav-sublist-cadastros">
+                    <li class="at-nav-item">
+                        <a th:href="@{/nova-maquina}" class="at-nav-link" id="nav-nova-maquina">
+                            <i class="bi bi-truck"></i><span>Nova Máquina</span>
+                        </a>
+                    </li>
+                    <li class="at-nav-item">
+                        <a th:href="@{/novo-colaborador}" class="at-nav-link" id="nav-novo-colaborador">
+                            <i class="bi bi-person-plus"></i><span>Novo Colaborador</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            <li th:if="${session.role == 'PROPRIETARIO'}" class="at-nav-item">
+                <a th:href="@{/colaboradores}" class="at-nav-link" id="nav-colaboradores">
+                    <i class="bi bi-people"></i><span>Colaboradores</span>
                 </a>
             </li>
         </ul>
@@ -71,6 +114,24 @@
     <input type="hidden" id="toast-success-message" th:if="${mensagemSucesso != null}" th:value="${mensagemSucesso}" />
     <input type="hidden" id="toast-error-message" th:if="${mensagemErro != null}" th:value="${mensagemErro}" />
     <script th:src="@{/script.js}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var toggle = document.getElementById('nav-toggle-cadastros');
+            var sublist = document.getElementById('nav-sublist-cadastros');
+            if (toggle && sublist) {
+                toggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    this.classList.toggle('open');
+                    sublist.classList.toggle('open');
+                });
+                var path = window.location.pathname;
+                if (path === '/nova-maquina' || path === '/novo-colaborador') {
+                    toggle.classList.add('open');
+                    sublist.classList.add('open');
+                }
+            }
+        });
+    </script>
 </th:block>
 </body>
 </html>

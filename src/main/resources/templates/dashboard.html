@@ -131,6 +131,14 @@
                         </a>
                         <hr style="border:none; border-top:1px solid var(--at-border); margin:8px 0;" th:if="${perfil == 'PROPRIETARIO'}">
                         <a th:if="${perfil == 'PROPRIETARIO'}"
+                           th:href="@{/nova-maquina}"
+                           class="btn btn-primary btn-block"
+                           id="btn-nova-maquina"
+                           style="justify-content:flex-start;">
+                            <i class="bi bi-truck"></i>
+                            Cadastrar Máquina
+                        </a>
+                        <a th:if="${perfil == 'PROPRIETARIO'}"
                            th:href="@{/novo-colaborador}"
                            class="btn btn-primary btn-block"
                            id="btn-novo-colaborador"

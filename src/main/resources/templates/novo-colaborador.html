@@ -44,8 +44,8 @@
                     </div>
                     <div class="at-card-body">
                         <form th:action="@{/novo-colaborador}"
-                              th:object="${userDTO}"
                               method="post"
+                              enctype="multipart/form-data"
                               novalidate
                               id="form-novo-colaborador">
                             <div class="at-form-group">
@@ -56,7 +56,6 @@
                                         type="text"
                                         id="nome"
                                         name="nome"
-                                        th:field="*{nome}"
                                         class="at-form-control"
                                         placeholder="Nome completo"
                                         minlength="3"
@@ -73,7 +72,6 @@
                                         type="email"
                                         id="email"
                                         name="email"
-                                        th:field="*{email}"
                                         class="at-form-control"
                                         placeholder="usuario@fazenda.com.br"
                                         required
@@ -93,7 +91,6 @@
                                                 type="password"
                                                 id="senha"
                                                 name="senha"
-                                                th:field="*{senha}"
                                                 class="at-form-control"
                                                 placeholder="Mínimo 6 caracteres"
                                                 minlength="6"
@@ -136,7 +133,6 @@
                                     <select
                                             id="perfil"
                                             name="perfil"
-                                            th:field="*{perfil}"
                                             class="at-form-control at-form-select"
                                             required>
                                         <option value="">Selecione</option>
@@ -146,17 +142,10 @@
                                     <span class="at-form-hint">Operador: padrão. Proprietário: acesso total.</span>
                                 </div>
                                 <div class="at-form-group">
-                                    <label class="at-form-label" for="ativo">
-                                        Status da conta
-                                    </label>
-                                    <select
-                                            id="ativo"
-                                            name="ativo"
-                                            class="at-form-control at-form-select">
-                                        <option value="true" selected>Ativo</option>
-                                        <option value="false">Inativo</option>
-                                    </select>
-                                    <span class="at-form-hint">Inativas não conseguem acessar.</span>
+                                    <label class="at-form-label" for="foto">Foto</label>
+                                    <input type="file" id="foto" name="foto" class="at-form-control"
+                                           accept="image/png, image/jpeg, image/webp" />
+                                    <span class="at-form-hint">Formatos: PNG, JPG, WebP. Máx: 5MB.</span>
                                 </div>
                             </div>
                             <div class="at-alert at-alert-info" style="margin-top:12px; margin-bottom:20px;">
@@ -170,7 +159,7 @@
                                     <i class="bi bi-person-check"></i>
                                     Cadastrar
                                 </button>
-                                <a th:href="@{/dashboard}" class="btn btn-ghost" id="btn-cancelar">
+                                <a th:href="@{/colaboradores}" class="btn btn-ghost" id="btn-cancelar">
                                     Cancelar
                                 </a>
                             </div>
@@ -183,5 +172,16 @@
     </div>
 </div>
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var btn = document.getElementById("btn-cadastrar");
+    if (btn) btn.disabled = false;
+    document.getElementById("form-novo-colaborador").querySelectorAll("input, select").forEach(function(el) {
+        el.addEventListener("input", function() { btn.disabled = false; });
+        el.addEventListener("change", function() { btn.disabled = false; });
+    });
+});
+</script>
 </body>
 </html>

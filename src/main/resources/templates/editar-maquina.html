@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <title>AgroTrack — Editar Máquina</title>
+    <meta charset="UTF-8">
+    <meta name="description" content="AgroTrack — Editar dados da máquina.">
+    <link rel="icon" type="image/png" th:href="@{/icon.png}">
+    <th:block th:replace="~{fragments/layout :: head-content}"></th:block>
+</head>
+<body>
+<div class="at-sidebar-overlay" id="sidebarOverlay"></div>
+<div class="at-wrapper">
+    <div th:replace="~{fragments/layout :: sidebar}"></div>
+    <div class="at-main">
+        <div th:replace="~{fragments/layout :: topbar('Editar Máquina')}"></div>
+        <main class="at-content" id="main-content">
+            <div class="at-page-header">
+                <h1 class="at-page-title" th:text="'Editar: ' + ${maquina.nome}">Editar Máquina</h1>
+                <p class="at-page-subtitle">Altere os dados da máquina conforme necessário.</p>
+            </div>
+
+            <div th:if="${errorMessage}" class="at-alert at-alert-danger" role="alert">
+                <i class="bi bi-exclamation-circle"></i> <span th:text="${errorMessage}">Erro.</span>
+            </div>
+
+            <form th:action="@{/maquinas/editar/{id}(id=${maquina.id})}"
+                  method="post"
+                  enctype="multipart/form-data"
+                  novalidate>
+
+                
+                <div class="at-card" style="margin-bottom:16px;">
+                    <div class="at-card-header">
+                        <h2 class="at-card-title">Identificação da Máquina</h2>
+                    </div>
+                    <div class="at-card-body">
+                        <div class="at-form-group">
+                            <label class="at-form-label" for="nome">Nome / Apelido <span class="required">*</span></label>
+                            <input type="text" id="nome" name="nome" class="at-form-control"
+                                   th:value="${maquina.nome}" required />
+                        </div>
+                        <div class="at-grid at-grid-2">
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="tipo">Tipo <span class="required">*</span></label>
+                                <select id="tipo" name="tipo" class="at-form-control at-form-select" required>
+                                    <option value="Trator" th:selected="${maquina.tipo == 'Trator'}">Trator</option>
+                                    <option value="Colheitadeira" th:selected="${maquina.tipo == 'Colheitadeira'}">Colheitadeira</option>
+                                    <option value="Pulverizador" th:selected="${maquina.tipo == 'Pulverizador'}">Pulverizador</option>
+                                </select>
+                            </div>
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="marca">Marca</label>
+                                <input type="text" id="marca" name="marca" class="at-form-control"
+                                       th:value="${maquina.marca}" />
+                            </div>
+                        </div>
+                        <div class="at-grid at-grid-2">
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="modelo">Modelo <span class="required">*</span></label>
+                                <input type="text" id="modelo" name="modelo" class="at-form-control"
+                                       th:value="${maquina.modelo}" required />
+                            </div>
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="ano">Ano <span class="required">*</span></label>
+                                <input type="number" id="ano" name="ano" class="at-form-control"
+                                       th:value="${maquina.ano}" required />
+                            </div>
+                        </div>
+                        <div class="at-grid at-grid-2">
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="numero_serie">Nº Série</label>
+                                <input type="text" id="numero_serie" name="numero_serie" class="at-form-control"
+                                       th:value="${maquina.numeroSerie}" />
+                            </div>
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="placa">Placa</label>
+                                <input type="text" id="placa" name="placa" class="at-form-control"
+                                       th:value="${maquina.placa}" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="at-card" style="margin-bottom:16px;">
+                    <div class="at-card-header">
+                        <h2 class="at-card-title">Vínculo com a Fazenda</h2>
+                    </div>
+                    <div class="at-card-body">
+                        <div class="at-grid at-grid-2">
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="id_fazenda">Fazenda</label>
+                                <select id="id_fazenda" name="id_fazenda" class="at-form-control at-form-select">
+                                    <option value="">Sem fazenda</option>
+                                    <option th:each="f : ${fazendas}" th:value="${f.id}"
+                                            th:text="${f.nome}"
+                                            th:selected="${maquina.idFazenda == f.id}">Fazenda</option>
+                                </select>
+                            </div>
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="id_talhao">Talhão</label>
+                                <select id="id_talhao" name="id_talhao" class="at-form-control at-form-select" disabled>
+                                    <option value="">Selecione a fazenda primeiro</option>
+                                </select>
+                                <input type="hidden" id="id_talhao_atual" th:value="${maquina.idTalhao}" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="at-card" style="margin-bottom:16px;">
+                    <div class="at-card-header">
+                        <h2 class="at-card-title">Dados Técnicos</h2>
+                    </div>
+                    <div class="at-card-body">
+                        <div class="at-grid at-grid-2">
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="hodometro_inicial">Horímetro (h) <span class="required">*</span></label>
+                                <input type="number" step="0.1" min="0" id="hodometro_inicial" name="hodometro_inicial"
+                                       class="at-form-control" th:value="${maquina.hodometroInicial}" required />
+                            </div>
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="capacidade_tanque">Tanque (L)</label>
+                                <input type="number" step="0.1" min="0" id="capacidade_tanque" name="capacidade_tanque"
+                                       class="at-form-control" th:value="${maquina.capacidadeTanque}" />
+                            </div>
+                        </div>
+                        <div class="at-grid at-grid-2">
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="tipo_combustivel">Combustível</label>
+                                <select id="tipo_combustivel" name="tipo_combustivel" class="at-form-control at-form-select">
+                                    <option value="">Selecione</option>
+                                    <option value="Diesel S10" th:selected="${maquina.tipoCombustivel == 'Diesel S10'}">Diesel S10</option>
+                                    <option value="Diesel S500" th:selected="${maquina.tipoCombustivel == 'Diesel S500'}">Diesel S500</option>
+                                    <option value="Gasolina" th:selected="${maquina.tipoCombustivel == 'Gasolina'}">Gasolina</option>
+                                    <option value="Etanol" th:selected="${maquina.tipoCombustivel == 'Etanol'}">Etanol</option>
+                                </select>
+                            </div>
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="consumo_medio">Consumo (L/h)</label>
+                                <input type="number" step="0.1" min="0" id="consumo_medio" name="consumo_medio"
+                                       class="at-form-control" th:value="${maquina.consumoMedio}" />
+                            </div>
+                        </div>
+                        <div class="at-grid at-grid-2">
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="intervalo_troca_oleo_horas">Troca de Óleo (h)</label>
+                                <input type="number" min="0" id="intervalo_troca_oleo_horas" name="intervalo_troca_oleo_horas"
+                                       class="at-form-control" th:value="${maquina.intervaloTrocaOleoHoras}" />
+                            </div>
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="intervalo_inspecao_horas">Inspeção (h)</label>
+                                <input type="number" min="0" id="intervalo_inspecao_horas" name="intervalo_inspecao_horas"
+                                       class="at-form-control" th:value="${maquina.intervaloInspecaoHoras}" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="at-card" style="margin-bottom:16px;">
+                    <div class="at-card-header">
+                        <h2 class="at-card-title">Status e Controle</h2>
+                    </div>
+                    <div class="at-card-body">
+                        <div class="at-grid at-grid-2">
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="status">Status</label>
+                                <select id="status" name="status" class="at-form-control at-form-select">
+                                    <option value="Disponivel" th:selected="${maquina.status == 'Disponivel'}">Disponível</option>
+                                    <option value="Em Operacao" th:selected="${maquina.status == 'Em Operacao'}">Em Operação</option>
+                                    <option value="Em Manutencao" th:selected="${maquina.status == 'Em Manutencao'}">Em Manutenção</option>
+                                    <option value="Inativa" th:selected="${maquina.status == 'Inativa'}">Inativa</option>
+                                </select>
+                            </div>
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="nivel_risco">Nível de Risco</label>
+                                <select id="nivel_risco" name="nivel_risco" class="at-form-control at-form-select">
+                                    <option value="Baixo" th:selected="${maquina.nivelRisco == 'Baixo'}">Baixo</option>
+                                    <option value="Medio" th:selected="${maquina.nivelRisco == 'Medio'}">Médio</option>
+                                    <option value="Alto" th:selected="${maquina.nivelRisco == 'Alto'}">Alto</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="at-grid at-grid-2">
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="data_aquisicao">Data de Aquisição</label>
+                                <input type="date" id="data_aquisicao" name="data_aquisicao"
+                                       class="at-form-control" th:value="${maquina.dataAquisicao}" />
+                            </div>
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="valor_aquisicao">Valor (R$)</label>
+                                <input type="number" step="0.01" min="0" id="valor_aquisicao" name="valor_aquisicao"
+                                       class="at-form-control" th:value="${maquina.valorAquisicao}" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="at-card" style="margin-bottom:16px;">
+                    <div class="at-card-header">
+                        <h2 class="at-card-title">Complementares</h2>
+                    </div>
+                    <div class="at-card-body">
+                        <div class="at-form-group">
+                            <label class="at-form-label" for="foto">Foto</label>
+                            <input type="file" id="foto" name="foto" class="at-form-control"
+                                   accept="image/png, image/jpeg, image/webp" />
+                            <span class="at-form-hint" th:if="${maquina.fotoPath}">Foto atual: <span th:text="${maquina.fotoPath}"></span>. Envie uma nova para substituir.</span>
+                        </div>
+                        <div class="at-form-group">
+                            <label class="at-form-label" for="observacoes">Observações</label>
+                            <textarea id="observacoes" name="observacoes" class="at-form-control" rows="3"
+                                      th:text="${maquina.observacoes}"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-bottom:24px;">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-check-lg"></i> Salvar Alterações
+                    </button>
+                    <a th:href="@{/maquinas}" class="btn btn-ghost btn-lg">Cancelar</a>
+                </div>
+            </form>
+        </main>
+        <div th:replace="~{fragments/layout :: footer}"></div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fazendaSelect = document.getElementById('id_fazenda');
+    const talhaoSelect = document.getElementById('id_talhao');
+    const idTalhaoAtual = document.getElementById('id_talhao_atual');
+
+    function carregarTalhoes(idFazenda, selecionado) {
+        if (!idFazenda) {
+            talhaoSelect.innerHTML = '<option value="">Sem talhão</option>';
+            talhaoSelect.disabled = true;
+            return;
+        }
+        talhaoSelect.innerHTML = '<option value="">Carregando...</option>';
+        talhaoSelect.disabled = true;
+        fetch('/api/maquinas/talhoes?id_fazenda=' + idFazenda)
+            .then(r => r.json())
+            .then(data => {
+                talhaoSelect.innerHTML = '<option value="">Sem talhão</option>';
+                data.forEach(function(t) {
+                    var opt = document.createElement('option');
+                    opt.value = t.id;
+                    opt.textContent = t.nome + (t.culturaAtual ? ' (' + t.culturaAtual + ')' : '');
+                    if (selecionado && t.id == selecionado) opt.selected = true;
+                    talhaoSelect.appendChild(opt);
+                });
+                talhaoSelect.disabled = false;
+            })
+            .catch(function() {
+                talhaoSelect.innerHTML = '<option value="">Erro ao carregar</option>';
+            });
+    }
+
+    if (fazendaSelect) {
+        var valorInicial = fazendaSelect.value;
+        if (idTalhaoAtual) {
+            carregarTalhoes(valorInicial, idTalhaoAtual.value);
+        }
+        fazendaSelect.addEventListener('change', function() {
+            carregarTalhoes(this.value, null);
+        });
+    }
+});
+</script>
+</body>
+</html>

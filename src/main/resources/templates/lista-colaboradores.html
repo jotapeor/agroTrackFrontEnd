@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <title>AgroTrack — Colaboradores</title>
+    <meta charset="UTF-8">
+    <meta name="description" content="AgroTrack — Listagem de colaboradores.">
+    <link rel="icon" type="image/png" th:href="@{/icon.png}">
+    <th:block th:replace="~{fragments/layout :: head-content}"></th:block>
+    <style>
+        .people-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 16px;
+        }
+        .person-card {
+            background: var(--at-surface);
+            border: 1px solid var(--at-border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 24px 16px 16px;
+            transition: box-shadow .2s;
+        }
+        .person-card:hover {
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        .person-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #f0fdf4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--at-text-muted);
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+        .person-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .person-name {
+            font-size: .95rem;
+            font-weight: 700;
+            color: var(--at-text);
+        }
+        .person-email {
+            font-size: .78rem;
+            color: var(--at-text-muted);
+            margin-bottom: 8px;
+        }
+        .person-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+        .person-actions {
+            margin-top: auto;
+            width: 100%;
+        }
+        .person-actions .btn {
+            width: 100%;
+        }
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--at-text-muted);
+        }
+        .empty-state i { font-size: 3rem; display: block; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+<div class="at-sidebar-overlay" id="sidebarOverlay"></div>
+<div class="at-wrapper">
+    <div th:replace="~{fragments/layout :: sidebar}"></div>
+    <div class="at-main">
+        <div th:replace="~{fragments/layout :: topbar('Colaboradores')}"></div>
+        <main class="at-content" id="main-content">
+            <div class="at-page-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                <div>
+                    <h1 class="at-page-title">Colaboradores</h1>
+                    <p class="at-page-subtitle" th:text="${#lists.size(colaboradores) + ' colaborador(es) cadastrado(s).'}">0 colaboradores.</p>
+                </div>
+                <a th:href="@{/novo-colaborador}" class="btn btn-primary">
+                    <i class="bi bi-person-plus"></i> Novo Colaborador
+                </a>
+            </div>
+
+            <div th:if="${mensagemSucesso}" class="at-alert at-alert-success" role="alert">
+                <i class="bi bi-check-circle"></i> <span th:text="${mensagemSucesso}">Sucesso.</span>
+            </div>
+            <div th:if="${errorMessage}" class="at-alert at-alert-danger" role="alert">
+                <i class="bi bi-exclamation-circle"></i> <span th:text="${errorMessage}">Erro.</span>
+            </div>
+
+            <div class="people-grid">
+                <div class="person-card" th:each="c : ${colaboradores}" th:if="${!#lists.isEmpty(colaboradores)}">
+                    <div class="person-avatar">
+                        <img th:if="${c.foto_path}" th:src="'http://localhost:8080/uploads/maquinas/' + ${c.foto_path}" alt="Foto" />
+                        <i th:unless="${c.foto_path}" class="bi bi-person"></i>
+                    </div>
+                    <div class="person-name" th:text="${c.nome}">Nome</div>
+                    <div class="person-email" th:text="${c.email}">Email</div>
+
+                    <div class="person-tags">
+                        <span class="at-badge" th:classappend="${c.perfil == 'PROPRIETARIO' ? 'at-badge-warning' : 'at-badge-info'}"
+                              th:text="${c.perfil == 'PROPRIETARIO' ? 'Proprietário' : 'Operador'}">Perfil</span>
+                        <span class="at-badge" th:classappend="${c.ativo ? 'at-badge-success' : 'at-badge-danger'}"
+                              th:text="${c.ativo ? 'Ativo' : 'Inativo'}">Status</span>
+                        <span class="at-badge" th:classappend="${c.primeiro_acesso ? 'at-badge-warning' : 'at-badge-neutral'}"
+                              th:text="${c.primeiro_acesso ? '1º Acesso' : 'Ativo'}">Acesso</span>
+                    </div>
+
+                    <div class="person-actions">
+                        <a th:href="@{/colaboradores/editar/{id}(id=${c.id_usuario})}" class="btn btn-outline btn-sm">
+                            <i class="bi bi-pencil"></i> Editar / Vincular
+                        </a>
+                    </div>
+                </div>
+
+                <div class="empty-state" th:if="${#lists.isEmpty(colaboradores)}">
+                    <i class="bi bi-people"></i>
+                    <div style="font-size:1rem; font-weight:600;">Nenhum colaborador cadastrado</div>
+                    <p style="margin-top:4px;">Cadastre o primeiro colaborador para começar.</p>
+                    <a th:href="@{/novo-colaborador}" class="btn btn-primary" style="margin-top:12px;">
+                        <i class="bi bi-person-plus"></i> Cadastrar Colaborador
+                    </a>
+                </div>
+            </div>
+        </main>
+        <div th:replace="~{fragments/layout :: footer}"></div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

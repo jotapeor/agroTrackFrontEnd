@@ -48,6 +48,7 @@ public class AuthController {
             session.setAttribute("email", email);
             session.setAttribute("primeiroAcesso", restService.extrairPrimeiroAcesso(token));
             session.setAttribute("nome", restService.extrairNome(token));
+            session.setAttribute("userId", restService.extrairUserId(token));
             return "redirect:/dashboard";
         } catch (HttpStatusCodeException ex) {
             try {
