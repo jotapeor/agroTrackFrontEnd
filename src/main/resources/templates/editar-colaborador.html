@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <title>AgroTrack — Editar Colaborador</title>
+    <meta charset="UTF-8">
+    <meta name="description" content="AgroTrack — Editar dados do colaborador e vincular máquinas.">
+    <link rel="icon" type="image/png" th:href="@{/icon.png}">
+    <th:block th:replace="~{fragments/layout :: head-content}"></th:block>
+</head>
+<body>
+<div class="at-sidebar-overlay" id="sidebarOverlay"></div>
+<div class="at-wrapper">
+    <div th:replace="~{fragments/layout :: sidebar}"></div>
+    <div class="at-main">
+        <div th:replace="~{fragments/layout :: topbar('Editar Colaborador')}"></div>
+        <main class="at-content" id="main-content">
+            <div class="at-page-header">
+                <h1 class="at-page-title" th:text="'Editar: ' + ${colaborador.nome}">Editar Colaborador</h1>
+                <p class="at-page-subtitle">Altere os dados e gerencie o vínculo com máquinas.</p>
+            </div>
+
+            <div th:if="${errorMessage}" class="at-alert at-alert-danger" role="alert">
+                <i class="bi bi-exclamation-circle"></i> <span th:text="${errorMessage}">Erro.</span>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                
+                <div class="at-card">
+                    <div class="at-card-header">
+                        <h2 class="at-card-title">Dados do Colaborador</h2>
+                    </div>
+                    <div class="at-card-body">
+                        <form th:action="@{/colaboradores/editar/{id}(id=${colaborador.id_usuario})}" method="post">
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="nome">Nome <span class="required">*</span></label>
+                                <input type="text" id="nome" name="nome" class="at-form-control"
+                                       th:value="${colaborador.nome}" minlength="3" required />
+                            </div>
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="email">E-mail <span class="required">*</span></label>
+                                <input type="email" id="email" name="email" class="at-form-control"
+                                       th:value="${colaborador.email}" required />
+                            </div>
+                            <div class="at-grid at-grid-2">
+                                <div class="at-form-group">
+                                    <label class="at-form-label" for="perfil">Perfil <span class="required">*</span></label>
+                                    <select id="perfil" name="perfil" class="at-form-control at-form-select" required>
+                                        <option value="OPERADOR" th:selected="${colaborador.perfil == 'OPERADOR'}">Operador</option>
+                                        <option value="PROPRIETARIO" th:selected="${colaborador.perfil == 'PROPRIETARIO'}">Proprietário</option>
+                                    </select>
+                                </div>
+                                <div class="at-form-group">
+                                    <label class="at-form-label" for="ativo">Status</label>
+                                    <select id="ativo" name="ativo" class="at-form-control at-form-select">
+                                        <option value="true" th:selected="${colaborador.ativo == true}">Ativo</option>
+                                        <option value="false" th:selected="${colaborador.ativo == false}">Inativo</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="at-alert at-alert-info" style="margin-top:8px;">
+                                <i class="bi bi-info-circle"></i>
+                                <span>A senha não pode ser alterada aqui. O próprio usuário altera no primeiro acesso.</span>
+                            </div>
+                            <div style="margin-top:16px;">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-lg"></i> Salvar Dados
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                
+                <div class="at-card">
+                    <div class="at-card-header">
+                        <h2 class="at-card-title">Máquinas Vinculadas</h2>
+                        <span class="at-badge at-badge-info" th:text="${#lists.size(idsVinculados)} + ' vinculada(s)'">0</span>
+                    </div>
+                    <div class="at-card-body">
+                        <form th:action="@{/colaboradores/vincular/{id}(id=${colaborador.id_usuario})}" method="post">
+                            <p style="font-size:.85rem; color:var(--at-text-muted); margin-bottom:12px;">
+                                Selecione as máquinas que este colaborador pode operar:
+                            </p>
+                            <div th:if="${#lists.isEmpty(maquinas)}" style="text-align:center; padding:20px; color:var(--at-text-muted);">
+                                <i class="bi bi-truck" style="font-size:1.5rem; display:block; margin-bottom:8px;"></i>
+                                Nenhuma máquina cadastrada.
+                                <a th:href="@{/nova-maquina}" style="display:block; margin-top:4px;">Cadastrar máquina</a>
+                            </div>
+                            <div th:each="m : ${maquinas}" style="margin-bottom:6px; display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid var(--at-border);">
+                                <input type="checkbox" th:id="'maq-' + ${m.id}" name="maquinas"
+                                       th:value="${m.id}"
+                                       th:checked="${idsVinculados != null && idsVinculados.contains(m.id)}" />
+                                <label th:for="'maq-' + ${m.id}" style="flex:1; cursor:pointer; font-size:.85rem;">
+                                    <strong th:text="${m.nome}">Máquina</strong>
+                                    <span class="text-muted" style="font-size:.75rem; display:block;"
+                                          th:text="${m.tipo + ' - ' + (m.nomeFazenda ?: 'Sem fazenda')}">Tipo</span>
+                                </label>
+                            </div>
+                            <div style="margin-top:16px;" th:if="${!#lists.isEmpty(maquinas)}">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-link-45deg"></i> Salvar Vínculos
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top:16px;">
+                <a th:href="@{/colaboradores}" class="btn btn-ghost">
+                    <i class="bi bi-arrow-left"></i> Voltar para lista
+                </a>
+            </div>
+        </main>
+        <div th:replace="~{fragments/layout :: footer}"></div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

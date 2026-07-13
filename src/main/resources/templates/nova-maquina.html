@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <title>AgroTrack — Cadastrar Máquina</title>
+    <meta charset="UTF-8">
+    <meta name="description" content="AgroTrack — Cadastrar nova máquina agrícola.">
+    <link rel="icon" type="image/png" th:href="@{/icon.png}">
+    <th:block th:replace="~{fragments/layout :: head-content}"></th:block>
+</head>
+<body>
+<div class="at-sidebar-overlay" id="sidebarOverlay"></div>
+<div class="at-wrapper">
+    <div th:replace="~{fragments/layout :: sidebar}"></div>
+    <div class="at-main">
+        <div th:replace="~{fragments/layout :: topbar('Cadastrar Máquina')}"></div>
+        <main class="at-content" id="main-content">
+            <div class="at-page-header">
+                <h1 class="at-page-title">Cadastrar Nova Máquina</h1>
+                <p class="at-page-subtitle">
+                    Preencha os dados da máquina para registrá-la no sistema.
+                </p>
+            </div>
+
+            <div th:if="${errorMessage}"
+                 class="at-alert at-alert-danger" role="alert">
+                <i class="bi bi-exclamation-circle"></i>
+                <div>
+                    <strong>Erro ao cadastrar</strong><br>
+                    <span th:text="${errorMessage}">Mensagem de erro.</span>
+                </div>
+            </div>
+
+            <form th:action="@{/nova-maquina}"
+                  method="post"
+                  enctype="multipart/form-data"
+                  novalidate
+                  id="form-nova-maquina">
+
+                
+                <div class="at-card" style="margin-bottom:16px;">
+                    <div class="at-card-header">
+                        <h2 class="at-card-title">1. Identificação da Máquina</h2>
+                        <span class="at-badge at-badge-info">Dados principais</span>
+                    </div>
+                    <div class="at-card-body">
+                        <div class="at-form-group">
+                            <label class="at-form-label" for="nome">
+                                Nome / Apelido <span class="required">*</span>
+                            </label>
+                            <input type="text" id="nome" name="nome"
+                                   class="at-form-control"
+                                   placeholder="Ex: Trator 01 - John Deere"
+                                   minlength="2" required />
+                            <span class="at-form-hint">Como a máquina será identificada no sistema.</span>
+                            <span class="at-form-error" id="nome-error" style="display:none;"></span>
+                        </div>
+
+                        <div class="at-grid at-grid-2">
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="tipo">
+                                    Tipo de Máquina <span class="required">*</span>
+                                </label>
+                                <select id="tipo" name="tipo" class="at-form-control at-form-select" required>
+                                    <option value="">Selecione</option>
+                                    <option value="Trator">Trator</option>
+                                    <option value="Colheitadeira">Colheitadeira</option>
+                                    <option value="Pulverizador">Pulverizador</option>
+                                </select>
+                            </div>
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="marca">Marca / Fabricante</label>
+                                <input type="text" id="marca" name="marca"
+                                       class="at-form-control"
+                                       placeholder="Ex: John Deere, Case IH" />
+                            </div>
+                        </div>
+
+                        <div class="at-grid at-grid-2">
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="modelo">
+                                    Modelo <span class="required">*</span>
+                                </label>
+                                <input type="text" id="modelo" name="modelo"
+                                       class="at-form-control"
+                                       placeholder="Ex: 6100J, Uniport 3030" required />
+                            </div>
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="ano">
+                                    Ano de Fabricação <span class="required">*</span>
+                                </label>
+                                <input type="number" id="ano" name="ano"
+                                       class="at-form-control"
+                                       placeholder="Ex: 2023"
+                                       min="1900" th:max="${#dates.createNow().year + 1}"
+                                       required />
+                            </div>
+                        </div>
+
+                        <div class="at-grid at-grid-2">
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="numero_serie">Nº de Série / Chassi</label>
+                                <input type="text" id="numero_serie" name="numero_serie"
+                                       class="at-form-control"
+                                       placeholder="Identificador único do fabricante" />
+                                <span class="at-form-hint">Importante para rastreabilidade.</span>
+                            </div>
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="placa">Placa</label>
+                                <input type="text" id="placa" name="placa"
+                                       class="at-form-control"
+                                       placeholder="Ex: ABC-1234 (se houver)" />
+                                <span class="at-form-hint">Para máquinas que circulam em via pública.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="at-card" style="margin-bottom:16px;">
+                    <div class="at-card-header">
+                        <h2 class="at-card-title">2. Vínculo com a Fazenda</h2>
+                        <span class="at-badge at-badge-neutral">Opcional</span>
+                    </div>
+                    <div class="at-card-body">
+                        <div class="at-grid at-grid-2">
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="id_fazenda">Fazenda</label>
+                                <select id="id_fazenda" name="id_fazenda"
+                                        class="at-form-control at-form-select">
+                                    <option value="">Selecione uma fazenda</option>
+                                    <option th:each="f : ${fazendas}"
+                                            th:value="${f.id}"
+                                            th:text="${f.nome}">Fazenda</option>
+                                </select>
+                            </div>
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="id_talhao">Talhão Atual</label>
+                                <select id="id_talhao" name="id_talhao"
+                                        class="at-form-control at-form-select" disabled>
+                                    <option value="">Selecione uma fazenda primeiro</option>
+                                </select>
+                                <span class="at-form-hint">Carregado conforme a fazenda selecionada.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="at-card" style="margin-bottom:16px;">
+                    <div class="at-card-header">
+                        <h2 class="at-card-title">3. Dados Técnicos</h2>
+                        <span class="at-badge at-badge-warning">Manutenção Preditiva</span>
+                    </div>
+                    <div class="at-card-body">
+                        <div class="at-grid at-grid-2">
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="hodometro_inicial">
+                                    Horímetro Inicial (horas) <span class="required">*</span>
+                                </label>
+                                <input type="number" step="0.1" min="0" id="hodometro_inicial" name="hodometro_inicial"
+                                       class="at-form-control"
+                                       placeholder="Ex: 1250.5"
+                                       required />
+                                <span class="at-form-hint">Horas de uso no momento do cadastro (0 se nova).</span>
+                            </div>
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="capacidade_tanque">Capacidade do Tanque (L)</label>
+                                <input type="number" step="0.1" min="0" id="capacidade_tanque" name="capacidade_tanque"
+                                       class="at-form-control"
+                                       placeholder="Ex: 250" />
+                            </div>
+                        </div>
+
+                        <div class="at-grid at-grid-2">
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="tipo_combustivel">Tipo de Combustível</label>
+                                <select id="tipo_combustivel" name="tipo_combustivel"
+                                        class="at-form-control at-form-select">
+                                    <option value="">Selecione</option>
+                                    <option value="Diesel S10">Diesel S10</option>
+                                    <option value="Diesel S500">Diesel S500</option>
+                                    <option value="Gasolina">Gasolina</option>
+                                    <option value="Etanol">Etanol</option>
+                                    <option value="Elétrico">Elétrico</option>
+                                </select>
+                            </div>
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="consumo_medio">Consumo Médio (L/h)</label>
+                                <input type="number" step="0.1" min="0" id="consumo_medio" name="consumo_medio"
+                                       class="at-form-control"
+                                       placeholder="Ex: 12.5" />
+                                <span class="at-form-hint">Ajuda a detectar anomalias de consumo.</span>
+                            </div>
+                        </div>
+
+                        <div class="at-grid at-grid-2">
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="intervalo_troca_oleo_horas">
+                                    Troca de Óleo (horas)
+                                </label>
+                                <input type="number" min="0" id="intervalo_troca_oleo_horas" name="intervalo_troca_oleo_horas"
+                                       class="at-form-control"
+                                       placeholder="Ex: 250" />
+                                <span class="at-form-hint">Intervalo recomendado pelo fabricante.</span>
+                            </div>
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="intervalo_inspecao_horas">
+                                    Inspeção Obrigatória (horas)
+                                </label>
+                                <input type="number" min="0" id="intervalo_inspecao_horas" name="intervalo_inspecao_horas"
+                                       class="at-form-control"
+                                       placeholder="Ex: 500" />
+                                <span class="at-form-hint">Ex: 500h conforme material de referência.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="at-card" style="margin-bottom:16px;">
+                    <div class="at-card-header">
+                        <h2 class="at-card-title">4. Status e Controle</h2>
+                        <span class="at-badge at-badge-success">Padrão definido</span>
+                    </div>
+                    <div class="at-card-body">
+                        <div class="at-alert at-alert-info" style="margin-bottom:16px;">
+                            <i class="bi bi-info-circle"></i>
+                            <span>
+                                <strong>RN04:</strong> Status padrão é <strong>Disponível</strong>.
+                                <strong>RN07:</strong> Risco inicial é sempre <strong>Baixo</strong> para máquinas recém-cadastradas.
+                            </span>
+                        </div>
+                        <div class="at-grid at-grid-2">
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="status">Status Operacional</label>
+                                <select id="status" name="status" class="at-form-control at-form-select">
+                                    <option value="Disponivel" selected>Disponível</option>
+                                    <option value="Em Operacao">Em Operação</option>
+                                    <option value="Em Manutencao">Em Manutenção</option>
+                                    <option value="Inativa">Inativa</option>
+                                </select>
+                                <span class="at-form-hint">Padrão: Disponível (RN04).</span>
+                            </div>
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="nivel_risco">Nível de Risco</label>
+                                <input type="text" id="nivel_risco" class="at-form-control" value="Baixo" disabled />
+                                <span class="at-form-hint">Sempre Baixo no cadastro (RN07).</span>
+                            </div>
+                        </div>
+                        <div class="at-grid at-grid-2">
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="data_aquisicao">Data de Aquisição</label>
+                                <input type="date" id="data_aquisicao" name="data_aquisicao"
+                                       class="at-form-control" />
+                            </div>
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="valor_aquisicao">Valor de Aquisição (R$)</label>
+                                <input type="number" step="0.01" min="0" id="valor_aquisicao" name="valor_aquisicao"
+                                       class="at-form-control"
+                                       placeholder="Ex: 320000.00" />
+                                <span class="at-form-hint">Opcional, enriquece a gestão de custos.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="at-card" style="margin-bottom:16px;">
+                    <div class="at-card-header">
+                        <h2 class="at-card-title">5. Complementares</h2>
+                        <span class="at-badge at-badge-neutral">Opcional</span>
+                    </div>
+                    <div class="at-card-body">
+                        <div class="at-form-group">
+                            <label class="at-form-label" for="foto">Foto da Máquina</label>
+                            <input type="file" id="foto" name="foto"
+                                   class="at-form-control"
+                                   accept="image/png, image/jpeg, image/webp" />
+                            <span class="at-form-hint">Formatos aceitos: PNG, JPG, WebP. Máx: 5MB.</span>
+                            <div id="foto-preview" style="margin-top:8px; display:none;">
+                                <img id="preview-img" src="#" alt="Preview"
+                                     style="max-width:200px; max-height:150px; border:1px solid var(--at-border); padding:4px;" />
+                            </div>
+                        </div>
+                        <div class="at-form-group">
+                            <label class="at-form-label" for="observacoes">Observações Gerais</label>
+                            <textarea id="observacoes" name="observacoes"
+                                      class="at-form-control"
+                                      rows="3"
+                                      placeholder="Informações adicionais sobre a máquina..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:24px;">
+                    <button type="submit" class="btn btn-primary btn-lg" id="btn-cadastrar">
+                        <i class="bi bi-truck"></i>
+                        Cadastrar Máquina
+                    </button>
+                    <a th:href="@{/dashboard}" class="btn btn-ghost btn-lg">
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+        </main>
+        <div th:replace="~{fragments/layout :: footer}"></div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // ---- Preview de foto ----
+        const fotoInput = document.getElementById('foto');
+        const previewDiv = document.getElementById('foto-preview');
+        const previewImg = document.getElementById('preview-img');
+        if (fotoInput) {
+            fotoInput.addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImg.src = e.target.result;
+                        previewDiv.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    previewDiv.style.display = 'none';
+                    previewImg.src = '#';
+                }
+            });
+        }
+
+        // ---- Carregar talhões conforme fazenda ----
+        const fazendaSelect = document.getElementById('id_fazenda');
+        const talhaoSelect = document.getElementById('id_talhao');
+        if (fazendaSelect && talhaoSelect) {
+            fazendaSelect.addEventListener('change', function() {
+                const idFazenda = this.value;
+                talhaoSelect.innerHTML = '<option value="">Carregando...</option>';
+                talhaoSelect.disabled = true;
+                if (!idFazenda) {
+                    talhaoSelect.innerHTML = '<option value="">Selecione uma fazenda primeiro</option>';
+                    return;
+                }
+                fetch('/api/maquinas/talhoes?id_fazenda=' + idFazenda)
+                    .then(r => r.json())
+                    .then(data => {
+                        talhaoSelect.innerHTML = '<option value="">Selecione um talhão</option>';
+                        data.forEach(function(t) {
+                            var opt = document.createElement('option');
+                            opt.value = t.id;
+                            opt.textContent = t.nome + (t.culturaAtual ? ' (' + t.culturaAtual + ')' : '');
+                            talhaoSelect.appendChild(opt);
+                        });
+                        talhaoSelect.disabled = false;
+                    })
+                    .catch(function() {
+                        talhaoSelect.innerHTML = '<option value="">Erro ao carregar</option>';
+                    });
+            });
+        }
+
+        // ---- Validação do formulário ----
+        const form = document.getElementById('form-nova-maquina');
+        const btn = document.getElementById('btn-cadastrar');
+        if (form && btn) {
+            form.addEventListener('submit', function() {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Cadastrando...';
+            });
+        }
+    });
+</script>
+</body>
+</html>

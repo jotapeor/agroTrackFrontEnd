@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <title>AgroTrack — Máquinas</title>
+    <meta charset="UTF-8">
+    <meta name="description" content="AgroTrack — Listagem de máquinas cadastradas.">
+    <link rel="icon" type="image/png" th:href="@{/icon.png}">
+    <th:block th:replace="~{fragments/layout :: head-content}"></th:block>
+    <style>
+        .machine-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:16px; }
+        .machine-card { background:var(--at-surface); border:1px solid var(--at-border); display:flex; flex-direction:column; transition:box-shadow .2s; }
+        .machine-card:hover { box-shadow:0 2px 12px rgba(0,0,0,0.08); }
+        .machine-card-photo { width:100%; height:160px; object-fit:cover; background:#f0fdf4; display:flex; align-items:center; justify-content:center; color:var(--at-text-muted); font-size:3rem; border-bottom:1px solid var(--at-border); }
+        .machine-card-photo img { width:100%; height:100%; object-fit:cover; }
+        .machine-card-body { padding:14px; flex:1; display:flex; flex-direction:column; }
+        .machine-card-name { font-size:.95rem; font-weight:700; color:var(--at-text); margin-bottom:2px; }
+        .machine-card-detail { font-size:.8rem; color:var(--at-text-secondary); margin-bottom:2px; }
+        .machine-card-tags { display:flex; gap:6px; flex-wrap:wrap; margin:8px 0; }
+        .machine-card-actions { display:flex; gap:6px; margin-top:auto; padding-top:10px; border-top:1px solid var(--at-border); }
+        .machine-card-actions form { display:inline; }
+        .empty-state { grid-column:1/-1; text-align:center; padding:60px 20px; color:var(--at-text-muted); }
+        .empty-state i { font-size:3rem; display:block; margin-bottom:12px; }
+    </style>
+</head>
+<body>
+<div class="at-sidebar-overlay" id="sidebarOverlay"></div>
+<div class="at-wrapper">
+    <div th:replace="~{fragments/layout :: sidebar}"></div>
+    <div class="at-main">
+        <div th:replace="~{fragments/layout :: topbar('Máquinas')}"></div>
+        <main class="at-content" id="main-content">
+            <div class="at-page-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                <div>
+                    <h1 class="at-page-title">Máquinas</h1>
+                    <p class="at-page-subtitle" th:text="${#lists.size(maquinas) + ' máquina(s) cadastrada(s).'}">0 máquinas.</p>
+                </div>
+                <a th:if="${session.role == 'PROPRIETARIO'}" th:href="@{/nova-maquina}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i> Nova Máquina
+                </a>
+            </div>
+
+            <div th:if="${mensagemSucesso}" class="at-alert at-alert-success" role="alert">
+                <i class="bi bi-check-circle"></i> <span th:text="${mensagemSucesso}">Sucesso.</span>
+            </div>
+            <div th:if="${errorMessage}" class="at-alert at-alert-danger" role="alert">
+                <i class="bi bi-exclamation-circle"></i> <span th:text="${errorMessage}">Erro.</span>
+            </div>
+
+            <div class="machine-grid">
+                <div class="machine-card" th:each="m : ${maquinas}" th:if="${!#lists.isEmpty(maquinas)}">
+                    <div class="machine-card-photo">
+                        <img th:if="${m.fotoPath}" th:src="'http://localhost:8080/uploads/maquinas/' + ${m.fotoPath}" alt="Foto" />
+                        <i th:unless="${m.fotoPath}" class="bi bi-truck"></i>
+                    </div>
+                    <div class="machine-card-body">
+                        <div class="machine-card-name" th:text="${m.nome}">Nome</div>
+                        <div class="machine-card-detail" th:text="${m.marca != null && !m.marca.isEmpty() ? m.marca + ' ' + m.modelo : m.modelo}">Modelo</div>
+                        <div class="machine-card-detail" th:text="'Ano ' + ${m.ano} + ' · ' + ${m.tipo}">Tipo</div>
+                        <div class="machine-card-detail" th:text="${m.nomeFazenda != null ? '📍 ' + m.nomeFazenda : ''}">Fazenda</div>
+
+                        <div class="machine-card-tags">
+                            <span class="at-badge" th:classappend="${m.status == 'Disponivel' ? 'at-badge-success' : (m.status == 'Em Operacao' ? 'at-badge-info' : (m.status == 'Em Manutencao' ? 'at-badge-danger' : 'at-badge-neutral'))}" th:text="${m.status}">Status</span>
+                            <span class="at-badge" th:classappend="${m.nivelRisco == 'Baixo' ? 'at-badge-success' : (m.nivelRisco == 'Medio' ? 'at-badge-warning' : 'at-badge-danger')}" th:text="${m.nivelRisco}">Risco</span>
+                            <span class="at-badge at-badge-neutral" th:if="${m.hodometroInicial}" th:text="${m.hodometroInicial} + 'h'">0h</span>
+                        </div>
+
+                        <div class="machine-card-actions" th:if="${session.role == 'PROPRIETARIO'}">
+                            <a th:href="@{/maquinas/editar/{id}(id=${m.id})}" class="btn btn-outline btn-sm" style="flex:1;">
+                                <i class="bi bi-pencil"></i> Editar
+                            </a>
+                            <button type="button" class="btn btn-outline btn-sm" style="color:var(--at-danger);" th:data-id="${m.id}" th:data-nome="${m.nome}" onclick="confirmarExclusao(this)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="empty-state" th:if="${#lists.isEmpty(maquinas)}">
+                    <i class="bi bi-truck"></i>
+                    <div style="font-size:1rem; font-weight:600;">Nenhuma máquina cadastrada</div>
+                    <p style="margin-top:4px;">Cadastre sua primeira máquina para começar.</p>
+                    <a th:href="@{/nova-maquina}" class="btn btn-primary" style="margin-top:12px;">
+                        <i class="bi bi-plus-lg"></i> Cadastrar Máquina
+                    </a>
+                </div>
+            </div>
+        </main>
+        <div th:replace="~{fragments/layout :: footer}"></div>
+    </div>
+</div>
+
+
+<div id="confirmModal" class="confirm-modal-overlay" style="display:none;">
+    <div class="confirm-modal">
+        <div class="confirm-modal-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <div class="confirm-modal-title">Excluir Máquina</div>
+        <div class="confirm-modal-text" id="confirmModalText">Tem certeza que deseja excluir esta máquina? Esta ação não pode ser desfeita.</div>
+        <div class="confirm-modal-actions">
+            <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
+            <form id="confirmDeleteForm" method="post" style="display:inline;">
+                <button type="submit" class="btn btn-primary" style="background:var(--at-danger); border-color:var(--at-danger);">
+                    <i class="bi bi-trash"></i> Excluir
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script>
+    function confirmarExclusao(btn) {
+        var id = btn.getAttribute('data-id');
+        var nome = btn.getAttribute('data-nome');
+        document.getElementById('confirmModalText').textContent = 'Tem certeza que deseja excluir "' + nome + '"? Esta ação não pode ser desfeita.';
+        document.getElementById('confirmDeleteForm').action = '/maquinas/excluir/' + id;
+        document.getElementById('confirmModal').style.display = 'flex';
+    }
+    function fecharModal() {
+        document.getElementById('confirmModal').style.display = 'none';
+    }
+    document.getElementById('confirmModal').addEventListener('click', function(e) {
+        if (e.target === this) fecharModal();
+    });
+</script>
+</body>
+</html>
