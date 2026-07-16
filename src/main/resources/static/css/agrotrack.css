@@ -357,6 +357,7 @@ a:hover { color: var(--at-primary-dark); }
 .at-badge-warning { background: #fef3c7; color: #92400e; }
 .at-badge-danger { background: #fee2e2; color: #991b1b; }
 .at-badge-info { background: #dbeafe; color: #1e40af; }
+.at-badge-primary { background: #e0e7ff; color: #3730a3; }
 .at-badge-neutral { background: #f1f5f9; color: #475569; }
 
 /* ===== TABLE ===== */

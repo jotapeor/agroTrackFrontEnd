@@ -89,7 +89,7 @@
                     <h1 class="at-page-title">Colaboradores</h1>
                     <p class="at-page-subtitle" th:text="${#lists.size(colaboradores) + ' colaborador(es) cadastrado(s).'}">0 colaboradores.</p>
                 </div>
-                <a th:href="@{/novo-colaborador}" class="btn btn-primary">
+                <a th:if="${session.role == 'PROPRIETARIO'}" th:href="@{/novo-colaborador}" class="btn btn-primary">
                     <i class="bi bi-person-plus"></i> Novo Colaborador
                 </a>
             </div>
@@ -104,25 +104,37 @@
             <div class="people-grid">
                 <div class="person-card" th:each="c : ${colaboradores}" th:if="${!#lists.isEmpty(colaboradores)}">
                     <div class="person-avatar">
-                        <img th:if="${c.foto_path}" th:src="'http://localhost:8080/uploads/maquinas/' + ${c.foto_path}" alt="Foto" />
+                        <img th:if="${c.foto_path}" th:src="'http://localhost:8080/uploads/usuarios/' + ${c.foto_path}" alt="Foto" />
                         <i th:unless="${c.foto_path}" class="bi bi-person"></i>
                     </div>
                     <div class="person-name" th:text="${c.nome}">Nome</div>
                     <div class="person-email" th:text="${c.email}">Email</div>
 
                     <div class="person-tags">
-                        <span class="at-badge" th:classappend="${c.perfil == 'PROPRIETARIO' ? 'at-badge-warning' : 'at-badge-info'}"
-                              th:text="${c.perfil == 'PROPRIETARIO' ? 'Proprietário' : 'Operador'}">Perfil</span>
+                        <span class="at-badge"
+                              th:classappend="${c.perfil == 'PROPRIETARIO' ? 'at-badge-success' : (c.perfil == 'SOCIO' ? 'at-badge-info' : 'at-badge-warning')}"
+                              th:text="${c.perfil == 'PROPRIETARIO' ? 'Proprietário' : (c.perfil == 'SOCIO' ? 'Sócio' : 'Operador')}">Perfil</span>
                         <span class="at-badge" th:classappend="${c.ativo ? 'at-badge-success' : 'at-badge-danger'}"
                               th:text="${c.ativo ? 'Ativo' : 'Inativo'}">Status</span>
-                        <span class="at-badge" th:classappend="${c.primeiro_acesso ? 'at-badge-warning' : 'at-badge-neutral'}"
-                              th:text="${c.primeiro_acesso ? '1º Acesso' : 'Ativo'}">Acesso</span>
+                        <span th:if="${c.primeiro_acesso}" class="at-badge at-badge-warning">1º Acesso</span>
                     </div>
 
                     <div class="person-actions">
-                        <a th:href="@{/colaboradores/editar/{id}(id=${c.id_usuario})}" class="btn btn-outline btn-sm">
+                        <!-- PROPRIETARIO: edita todos -->
+                        <a th:if="${session.role == 'PROPRIETARIO'}"
+                           th:href="@{/colaboradores/editar/{id}(id=${c.id_usuario})}"
+                           class="btn btn-outline btn-sm">
                             <i class="bi bi-pencil"></i> Editar / Vincular
                         </a>
+                        <!-- SOCIO: edita apenas OPERADOR -->
+                        <a th:if="${session.role == 'SOCIO' && c.perfil == 'OPERADOR'}"
+                           th:href="@{/colaboradores/editar/{id}(id=${c.id_usuario})}"
+                           class="btn btn-outline btn-sm">
+                            <i class="bi bi-pencil"></i> Editar / Vincular
+                        </a>
+                        <!-- SOCIO vendo PROPRIETARIO ou SOCIO, ou OPERADOR logado: sem ação -->
+                        <span th:if="${session.role == 'OPERADOR' || (session.role == 'SOCIO' && c.perfil != 'OPERADOR')}"
+                              style="font-size:.8rem; color:var(--at-text-muted);">—</span>
                     </div>
                 </div>
 
