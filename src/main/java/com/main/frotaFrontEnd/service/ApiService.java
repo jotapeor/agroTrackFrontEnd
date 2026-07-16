@@ -280,4 +280,38 @@ public class ApiService {
                 .retrieve()
                 .body(java.util.List.class);
     }
+
+    @SuppressWarnings("unchecked")
+    public java.util.Map<String, Object> buscarMeusDados(String token) {
+        return restClient.get()
+                .uri("/usuario/me")
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(java.util.Map.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.Map<String, Object> atualizarMeusDados(String nome, String email,
+                                                             org.springframework.web.multipart.MultipartFile foto,
+                                                             String token) {
+        var body = new org.springframework.util.LinkedMultiValueMap<String, Object>();
+        if (nome != null && !nome.isEmpty()) body.add("nome", nome);
+        if (email != null && !email.isEmpty()) body.add("email", email);
+        if (foto != null && !foto.isEmpty()) body.add("foto", foto.getResource());
+
+        return restClient.put()
+                .uri("/usuario/me")
+                .header("Authorization", "Bearer " + token)
+                .body(body)
+                .retrieve()
+                .body(java.util.Map.class);
+    }
+
+    public String excluirColaborador(Long id, String token) {
+        return restClient.delete()
+                .uri("/proprietario/colaboradores/{id}", id)
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(String.class);
+    }
 }

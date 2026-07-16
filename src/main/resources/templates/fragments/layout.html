@@ -83,16 +83,22 @@
                     </li>
                 </ul>
             </li>
-            <li th:if="${session.role == 'PROPRIETARIO'}" class="at-nav-item">
+            <li th:if="${session.role == 'PROPRIETARIO' || session.role == 'SOCIO'}" class="at-nav-item">
                 <a th:href="@{/colaboradores}" class="at-nav-link" id="nav-colaboradores">
                     <i class="bi bi-people"></i><span>Colaboradores</span>
+                </a>
+            </li>
+            <li th:if="${session.role == 'PROPRIETARIO' || session.role == 'SOCIO'}"><p class="at-nav-label">Conta</p></li>
+            <li th:if="${session.role == 'PROPRIETARIO' || session.role == 'SOCIO'}" class="at-nav-item">
+                <a th:href="@{/meu-perfil}" class="at-nav-link" id="nav-meu-perfil">
+                    <i class="bi bi-person-gear"></i><span>Meu Perfil</span>
                 </a>
             </li>
         </ul>
     </nav>
     <div class="at-sidebar-footer">
         <div class="at-sidebar-user-name" th:text="${session.nome ?: 'Usuário'}">Usuário</div>
-        <div class="at-sidebar-user-role" th:text="${session.role == 'PROPRIETARIO' ? 'Proprietário' : 'Operador'}">Operador</div>
+        <div class="at-sidebar-user-role" th:text="${session.role == 'PROPRIETARIO' ? 'Proprietário' : (session.role == 'SOCIO' ? 'Sócio' : 'Operador')}">Operador</div>
     </div>
 </aside>
 <header th:fragment="topbar(pageTitle)" class="at-topbar">
@@ -102,7 +108,7 @@
     <div class="at-topbar-user">
         <i class="bi bi-person-circle"></i>
         <span th:text="${session.nome ?: 'Usuário'}">Usuário</span>
-        <span class="at-topbar-role" th:text="${session.role == 'PROPRIETARIO' ? '(Proprietário)' : '(Operador)'}">(Operador)</span>
+        <span class="at-topbar-role" th:text="${session.role == 'PROPRIETARIO' ? '(Proprietário)' : (session.role == 'SOCIO' ? '(Sócio)' : '(Operador)')}">(Operador)</span>
         <a th:href="@{/logout}" class="at-topbar-logout" title="Sair"><i class="bi bi-box-arrow-right"></i></a>
     </div>
 </header>

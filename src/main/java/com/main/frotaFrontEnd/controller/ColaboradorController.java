@@ -20,7 +20,7 @@ public class ColaboradorController {
 
     @GetMapping("/colaboradores")
     public String listar(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
-        if (!isProprietario(session)) {
+        if (!isProprietarioOuSocio(session)) {
             redirectAttributes.addFlashAttribute("errorMessage", "Acesso negado.");
             return "redirect:/dashboard";
         }
@@ -34,16 +34,18 @@ public class ColaboradorController {
                         .toList();
             }
             model.addAttribute("colaboradores", colaboradores != null ? colaboradores : List.of());
+            model.addAttribute("roleLogado", session.getAttribute("role"));
         } catch (Exception e) {
             e.printStackTrace();
             model.addAttribute("colaboradores", List.of());
+            model.addAttribute("roleLogado", session.getAttribute("role"));
         }
         return "lista-colaboradores";
     }
 
     @GetMapping("/colaboradores/editar/{id}")
     public String editar(@PathVariable Long id, HttpSession session, Model model, RedirectAttributes redirectAttributes) {
-        if (!isProprietario(session)) {
+        if (!isProprietarioOuSocio(session)) {
             redirectAttributes.addFlashAttribute("errorMessage", "Acesso negado.");
             return "redirect:/dashboard";
         }
@@ -53,9 +55,18 @@ public class ColaboradorController {
             return "redirect:/colaboradores";
         }
         String token = (String) session.getAttribute("token");
+        String role = (String) session.getAttribute("role");
         try {
             Map<String, Object> colaborador = apiService.buscarColaborador(id, token);
+
+            // SÓCIO só pode editar OPERADOR
+            if ("SOCIO".equals(role) && !"OPERADOR".equals(colaborador.get("perfil"))) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Você só pode editar contas de operador.");
+                return "redirect:/colaboradores";
+            }
+
             model.addAttribute("colaborador", colaborador);
+            model.addAttribute("roleLogado", role);
 
             List<Map<String, Object>> maquinas = apiService.listarMaquinas(token);
             model.addAttribute("maquinas", maquinas);
@@ -77,7 +88,7 @@ public class ColaboradorController {
                                @RequestParam(value = "ativo", defaultValue = "true") String ativo,
                                HttpSession session,
                                RedirectAttributes redirectAttributes) {
-        if (!isProprietario(session)) {
+        if (!isProprietarioOuSocio(session)) {
             redirectAttributes.addFlashAttribute("errorMessage", "Acesso negado.");
             return "redirect:/dashboard";
         }
@@ -87,6 +98,13 @@ public class ColaboradorController {
             return "redirect:/colaboradores";
         }
         String token = (String) session.getAttribute("token");
+        String role = (String) session.getAttribute("role");
+
+        // SÓCIO: forçar perfil como OPERADOR (defesa em profundidade)
+        if ("SOCIO".equals(role)) {
+            perfil = "OPERADOR";
+        }
+
         try {
             apiService.atualizarColaborador(id, Map.of("nome", nome, "email", email, "perfil", perfil, "ativo", ativo), token);
             redirectAttributes.addFlashAttribute("mensagemSucesso", "Colaborador atualizado com sucesso!");
@@ -105,11 +123,27 @@ public class ColaboradorController {
                                    @RequestParam(value = "maquinas", required = false) List<Long> idsMaquinas,
                                    HttpSession session,
                                    RedirectAttributes redirectAttributes) {
-        if (!isProprietario(session)) {
+        if (!isProprietarioOuSocio(session)) {
             redirectAttributes.addFlashAttribute("errorMessage", "Acesso negado.");
             return "redirect:/dashboard";
         }
         String token = (String) session.getAttribute("token");
+        String role = (String) session.getAttribute("role");
+
+        // SÓCIO: verificar se alvo é OPERADOR
+        if ("SOCIO".equals(role)) {
+            try {
+                Map<String, Object> colaborador = apiService.buscarColaborador(id, token);
+                if (!"OPERADOR".equals(colaborador.get("perfil"))) {
+                    redirectAttributes.addFlashAttribute("errorMessage", "Você só pode vincular máquinas a operadores.");
+                    return "redirect:/colaboradores/editar/" + id;
+                }
+            } catch (Exception e) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Colaborador não encontrado.");
+                return "redirect:/colaboradores/editar/" + id;
+            }
+        }
+
         try {
             if (idsMaquinas == null) idsMaquinas = List.of();
             apiService.vincularMaquinas(id, idsMaquinas, token);
@@ -120,7 +154,30 @@ public class ColaboradorController {
         return "redirect:/colaboradores/editar/" + id;
     }
 
+    @PostMapping("/colaboradores/excluir/{id}")
+    public String excluir(@PathVariable Long id,
+                          HttpSession session,
+                          RedirectAttributes redirectAttributes) {
+        if (!isProprietario(session)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Acesso negado.");
+            return "redirect:/dashboard";
+        }
+        String token = (String) session.getAttribute("token");
+        try {
+            apiService.excluirColaborador(id, token);
+            redirectAttributes.addFlashAttribute("mensagemSucesso", "Colaborador excluído com sucesso!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Erro ao excluir colaborador.");
+        }
+        return "redirect:/colaboradores";
+    }
+
     private boolean isProprietario(HttpSession session) {
         return session.getAttribute("token") != null && "PROPRIETARIO".equals(session.getAttribute("role"));
+    }
+
+    private boolean isProprietarioOuSocio(HttpSession session) {
+        String role = (String) session.getAttribute("role");
+        return session.getAttribute("token") != null && ("PROPRIETARIO".equals(role) || "SOCIO".equals(role));
     }
 }
