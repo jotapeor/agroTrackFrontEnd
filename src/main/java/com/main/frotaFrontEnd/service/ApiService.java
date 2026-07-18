@@ -314,4 +314,178 @@ public class ApiService {
                 .retrieve()
                 .body(String.class);
     }
+
+    @SuppressWarnings("unchecked")
+    public java.util.Map<String, Object> trocarStatusMaquina(Long idMaquina, String novoStatus, boolean confirmacao, String pesoCarregado, String hodometroFim, String observacoes, String token) {
+        var body = new java.util.HashMap<String, Object>();
+        body.put("novoStatus", novoStatus);
+        body.put("confirmacao", confirmacao);
+        if (pesoCarregado != null && !pesoCarregado.isEmpty()) {
+            body.put("pesoCarregado", new java.math.BigDecimal(pesoCarregado));
+        }
+        if (hodometroFim != null && !hodometroFim.isEmpty()) {
+            body.put("hodometroFim", new java.math.BigDecimal(hodometroFim));
+        }
+        if (observacoes != null && !observacoes.isEmpty()) {
+            body.put("observacoes", observacoes);
+        }
+
+        try {
+            return restClient.post()
+                    .uri("/operacoes/maquina/{id}/status", idMaquina)
+                    .header("Authorization", "Bearer " + token)
+                    .body(body)
+                    .retrieve()
+                    .body(java.util.Map.class);
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            try {
+                String errorBody = e.getResponseBodyAsString();
+                if (errorBody.contains("\"message\"")) {
+                    int start = errorBody.indexOf("\"message\":\"") + 11;
+                    int end = errorBody.indexOf("\"", start);
+                    throw new RuntimeException(errorBody.substring(start, end));
+                }
+                throw new RuntimeException("Erro ao trocar status: " + errorBody);
+            } catch (Exception ex) {
+                throw new RuntimeException("Erro ao trocar status: " + e.getResponseBodyAsString());
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.List<java.util.Map<String, Object>> listarHistoricoMaquina(Long idMaquina, String token) {
+        return restClient.get()
+                .uri("/operacoes/maquina/{id}/historico", idMaquina)
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(java.util.List.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.List<java.util.Map<String, Object>> listarOrdens(String token) {
+        return restClient.get()
+                .uri("/manutencao/ordens")
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(java.util.List.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.Map<String, Object> abrirOrdem(Long idMaquina, String urgencia, String descricao, String token) {
+        var body = new java.util.HashMap<String, Object>();
+        body.put("urgencia", urgencia);
+        body.put("descricao", descricao);
+        return restClient.post()
+                .uri("/manutencao/maquina/{id}/ordens", idMaquina)
+                .header("Authorization", "Bearer " + token)
+                .body(body)
+                .retrieve()
+                .body(java.util.Map.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.Map<String, Object> aprovarOrdem(Long idOrdem, boolean aprovada, String token) {
+        return restClient.post()
+                .uri("/manutencao/ordens/{id}/aprovar", idOrdem)
+                .header("Authorization", "Bearer " + token)
+                .body(java.util.Map.of("aprovada", aprovada))
+                .retrieve()
+                .body(java.util.Map.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.Map<String, Object> encerrarOrdem(Long idOrdem, String observacao, String token) {
+        return restClient.post()
+                .uri("/manutencao/ordens/{id}/encerrar", idOrdem)
+                .header("Authorization", "Bearer " + token)
+                .body(java.util.Map.of("observacao", observacao))
+                .retrieve()
+                .body(java.util.Map.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.Map<String, Object> obterDashboard(String token) {
+        return restClient.get()
+                .uri("/dashboard")
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(java.util.Map.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.List<java.util.Map<String, Object>> listarNotificacoes(String token) {
+        return restClient.get()
+                .uri("/notificacoes")
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(java.util.List.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public void marcarNotificacaoLida(Long idNotificacao, String token) {
+        restClient.post()
+                .uri("/notificacoes/{id}/lida", idNotificacao)
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .toBodilessEntity();
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.Map<String, Object> registrarAbastecimento(Long idMaquina, String dataAbastecimento, String litros, String tipoCombustivel, String hodometroAtual, String token) {
+        var body = new java.util.HashMap<String, Object>();
+        if (dataAbastecimento != null && !dataAbastecimento.isEmpty()) {
+            body.put("dataAbastecimento", dataAbastecimento);
+        }
+        body.put("litros", new java.math.BigDecimal(litros));
+        body.put("tipoCombustivel", tipoCombustivel);
+        body.put("hodometroAtual", new java.math.BigDecimal(hodometroAtual));
+
+        try {
+            return restClient.post()
+                    .uri("/abastecimentos/maquina/{id}", idMaquina)
+                    .header("Authorization", "Bearer " + token)
+                    .body(body)
+                    .retrieve()
+                    .body(java.util.Map.class);
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            try {
+                String errorBody = e.getResponseBodyAsString();
+                if (errorBody.contains("\"message\"")) {
+                    int start = errorBody.indexOf("\"message\":\"") + 11;
+                    int end = errorBody.indexOf("\"", start);
+                    throw new RuntimeException(errorBody.substring(start, end));
+                }
+                throw new RuntimeException("Erro ao registrar abastecimento: " + errorBody);
+            } catch (Exception ex) {
+                throw new RuntimeException("Erro ao registrar abastecimento: " + e.getResponseBodyAsString());
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.Map<String, Object> autorizarRisco(Long idMaquina, String justificativa, String token) {
+        var body = new java.util.HashMap<String, Object>();
+        body.put("justificativa", justificativa);
+
+        try {
+            return restClient.post()
+                    .uri("/proprietario/maquinas/{id}/autorizar-risco", idMaquina)
+                    .header("Authorization", "Bearer " + token)
+                    .body(body)
+                    .retrieve()
+                    .body(java.util.Map.class);
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            try {
+                String errorBody = e.getResponseBodyAsString();
+                if (errorBody.contains("\"message\"")) {
+                    int start = errorBody.indexOf("\"message\":\"") + 11;
+                    int end = errorBody.indexOf("\"", start);
+                    throw new RuntimeException(errorBody.substring(start, end));
+                }
+                throw new RuntimeException("Erro ao autorizar risco: " + errorBody);
+            } catch (Exception ex) {
+                throw new RuntimeException("Erro ao autorizar risco: " + e.getResponseBodyAsString());
+            }
+        }
+    }
 }

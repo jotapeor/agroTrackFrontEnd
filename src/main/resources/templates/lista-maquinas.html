@@ -64,13 +64,18 @@
                             <span class="at-badge at-badge-neutral" th:if="${m.hodometroInicial}" th:text="${m.hodometroInicial} + 'h'">0h</span>
                         </div>
 
-                        <div class="machine-card-actions" th:if="${session.role == 'PROPRIETARIO'}">
-                            <a th:href="@{/maquinas/editar/{id}(id=${m.id})}" class="btn btn-outline btn-sm" style="flex:1;">
-                                <i class="bi bi-pencil"></i> Editar
+                        <div class="machine-card-actions">
+                            <a th:href="@{/maquinas/{id}/status(id=${m.id})}" class="btn btn-outline btn-sm" style="flex:1; border-color:var(--at-primary); color:var(--at-primary);">
+                                <i class="bi bi-arrow-repeat"></i> Status/Operação
                             </a>
-                            <button type="button" class="btn btn-outline btn-sm" style="color:var(--at-danger);" th:data-id="${m.id}" th:data-nome="${m.nome}" onclick="confirmarExclusao(this)">
-                                <i class="bi bi-trash"></i>
-                            </button>
+                            <th:block th:if="${session.role == 'PROPRIETARIO'}">
+                                <a th:href="@{/maquinas/editar/{id}(id=${m.id})}" class="btn btn-outline btn-sm">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-outline btn-sm" style="color:var(--at-danger);" th:data-id="${m.id}" th:data-nome="${m.nome}" onclick="confirmarExclusao(this)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </th:block>
                         </div>
                     </div>
                 </div>

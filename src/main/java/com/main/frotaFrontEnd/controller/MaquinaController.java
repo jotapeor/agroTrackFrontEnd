@@ -188,6 +188,73 @@ public class MaquinaController {
         }
     }
 
+    @GetMapping("/maquinas/{id}/status")
+    public String trocarStatusForm(@PathVariable Long id, HttpSession session, Model model, RedirectAttributes redirectAttributes) {
+        String token = (String) session.getAttribute("token");
+        if (token == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Acesso negado.");
+            return "redirect:/login";
+        }
+        try {
+            Map<String, Object> maquina = apiService.buscarMaquina(id, token);
+            model.addAttribute("maquina", maquina);
+            List<Map<String, Object>> historico = apiService.listarHistoricoMaquina(id, token);
+            model.addAttribute("historico", historico);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Máquina não encontrada.");
+            return "redirect:/maquinas";
+        }
+        return "trocar-status";
+    }
+
+    @PostMapping("/maquinas/{id}/status")
+    public String salvarStatus(@PathVariable Long id,
+                               @RequestParam("novoStatus") String novoStatus,
+                               @RequestParam(value = "confirmacao", required = false) boolean confirmacao,
+                               @RequestParam(value = "pesoCarregado", required = false) String pesoCarregado,
+                               @RequestParam(value = "hodometroFim", required = false) String hodometroFim,
+                               @RequestParam(value = "observacoes", required = false) String observacoes,
+                               HttpSession session,
+                               RedirectAttributes redirectAttributes) {
+        String token = (String) session.getAttribute("token");
+        if (token == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Acesso negado.");
+            return "redirect:/login";
+        }
+        try {
+            apiService.trocarStatusMaquina(id, novoStatus, confirmacao, pesoCarregado, hodometroFim, observacoes, token);
+            redirectAttributes.addFlashAttribute("mensagemSucesso", "Status atualizado com sucesso!");
+            return "redirect:/maquinas";
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+            return "redirect:/maquinas/" + id + "/status";
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Erro inesperado: " + ex.getMessage());
+            return "redirect:/maquinas/" + id + "/status";
+        }
+    }
+
+    @PostMapping("/maquinas/{id}/autorizar-risco")
+    public String autorizarRisco(@PathVariable Long id,
+                                 @RequestParam("justificativa") String justificativa,
+                                 HttpSession session,
+                                 RedirectAttributes redirectAttributes) {
+        String token = (String) session.getAttribute("token");
+        if (token == null || !"PROPRIETARIO".equals(session.getAttribute("role"))) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Acesso negado.");
+            return "redirect:/login";
+        }
+        try {
+            apiService.autorizarRisco(id, justificativa, token);
+            redirectAttributes.addFlashAttribute("mensagemSucesso", "Operação temporária autorizada com sucesso!");
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Erro inesperado.");
+        }
+        return "redirect:/maquinas/" + id + "/status";
+    }
+
     private boolean isProprietario(HttpSession session) {
         return session.getAttribute("token") != null && "PROPRIETARIO".equals(session.getAttribute("role"));
     }

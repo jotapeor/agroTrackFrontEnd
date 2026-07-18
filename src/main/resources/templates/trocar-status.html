@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <title>AgroTrack — Trocar Status e Operação</title>
+    <meta charset="UTF-8">
+    <meta name="description" content="AgroTrack — Operação da máquina.">
+    <link rel="icon" type="image/png" th:href="@{/icon.png}">
+    <th:block th:replace="~{fragments/layout :: head-content}"></th:block>
+    <style>
+        .history-list { margin-top: 16px; border: 1px solid var(--at-border); border-radius: var(--at-radius); background: var(--at-surface); overflow: hidden; }
+        .history-item { padding: 12px 16px; border-bottom: 1px solid var(--at-border); }
+        .history-item:last-child { border-bottom: none; }
+        .history-date { font-size: 0.85rem; color: var(--at-text-muted); margin-bottom: 4px; }
+        .history-body { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+        .history-info { font-size: 0.95rem; color: var(--at-text); }
+        .history-info strong { color: var(--at-text-emphasis); }
+        .history-stats { text-align: right; font-size: 0.85rem; color: var(--at-text-secondary); }
+    </style>
+</head>
+<body>
+<div class="at-sidebar-overlay" id="sidebarOverlay"></div>
+<div class="at-wrapper">
+    <div th:replace="~{fragments/layout :: sidebar}"></div>
+    <div class="at-main">
+        <div th:replace="~{fragments/layout :: topbar('Operação')}"></div>
+        <main class="at-content" id="main-content">
+            <div class="at-page-header">
+                <h1 class="at-page-title" th:text="'Operação: ' + ${maquina.nome}">Operação da Máquina</h1>
+                <p class="at-page-subtitle" th:text="${maquina.marca} + ' ' + ${maquina.modelo} + ' — Status Atual: ' + ${maquina.status}">Detalhes</p>
+            </div>
+
+            <div th:if="${errorMessage}" class="at-alert at-alert-danger" role="alert">
+                <i class="bi bi-exclamation-circle"></i> <span th:text="${errorMessage}">Erro.</span>
+            </div>
+            
+            <div th:if="${mensagemSucesso}" class="at-alert at-alert-success" role="alert">
+                <i class="bi bi-check-circle"></i> <span th:text="${mensagemSucesso}">Sucesso.</span>
+            </div>
+
+            <div th:if="${maquina.nivelRisco == 'Alto'}" class="at-card" style="margin-bottom: 16px;">
+                <div class="at-card-header">
+                    <h2 class="at-card-title" style="color: var(--at-danger);"><i class="bi bi-exclamation-triangle"></i> Risco Alto Detectado</h2>
+                </div>
+                <div class="at-card-body">
+                    <div th:if="${maquina.autorizadaOperacaoRisco}">
+                        <div class="at-alert at-alert-success" style="margin: 0;">
+                            <i class="bi bi-shield-check"></i> <strong>Operação Liberada!</strong> A próxima entrada em operação está autorizada (válido para uma única vez).
+                        </div>
+                    </div>
+                    <div th:unless="${maquina.autorizadaOperacaoRisco}">
+                        <div class="at-alert at-alert-warning" style="margin-bottom: 16px;">
+                            <i class="bi bi-exclamation-octagon"></i> Máquina bloqueada para operação devido ao nível de risco <strong>Alto</strong>.
+                        </div>
+                        <form th:if="${session.role == 'PROPRIETARIO'}" th:action="@{/maquinas/{id}/autorizar-risco(id=${maquina.id})}" method="post">
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="justificativa">Justificativa da Autorização <span class="required">*</span></label>
+                                <textarea id="justificativa" name="justificativa" class="at-form-control" rows="2" placeholder="Descreva por que a operação é segura neste momento..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="background-color: var(--at-danger); border-color: var(--at-danger);">
+                                <i class="bi bi-unlock"></i> Autorizar Operação Temporária
+                            </button>
+                        </form>
+                        <p th:unless="${session.role == 'PROPRIETARIO'}" style="color: var(--at-text-muted); font-size: 0.9rem;">
+                            Somente o Proprietário pode autorizar a operação desta máquina no momento.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="at-grid at-grid-2">
+                <div class="at-card">
+                    <div class="at-card-header">
+                        <h2 class="at-card-title">Atualizar Status</h2>
+                    </div>
+                    <div class="at-card-body">
+                        <form th:action="@{/maquinas/{id}/status(id=${maquina.id})}" method="post">
+                            <div class="at-form-group">
+                                <label class="at-form-label" for="novoStatus">Novo Status</label>
+                                <select id="novoStatus" name="novoStatus" class="at-form-control at-form-select" required onchange="toggleCampos(this.value, '[[${maquina.status}]]', '[[${maquina.tipo}]]')">
+                                    <option value="">Selecione o novo status...</option>
+                                    <option value="Disponivel" th:disabled="${maquina.status == 'Disponivel'}">Disponível</option>
+                                    <option value="Em Operacao" th:disabled="${maquina.status == 'Em Operacao' || (maquina.nivelRisco == 'Alto' && !maquina.autorizadaOperacaoRisco)}">Em Operação</option>
+                                    <option value="Em Manutencao" th:disabled="${maquina.status == 'Em Manutencao'}">Em Manutenção</option>
+                                    <option value="Inativa" th:disabled="${maquina.status == 'Inativa'}">Inativa</option>
+                                </select>
+                            </div>
+                            
+                            <div id="campos-iniciar-operacao" style="display: none; padding: 12px; background: #f8fafc; border-radius: 6px; margin-bottom: 16px; border: 1px solid #e2e8f0;">
+                                <div class="at-form-group" style="margin-bottom: 8px;">
+                                    <label class="at-form-label">
+                                        <input type="checkbox" name="confirmacao" value="true"> Confirmo o início da operação (Hodômetro Inicial: <span th:text="${maquina.hodometroInicial}"></span>h)
+                                    </label>
+                                </div>
+                                <div class="at-form-group" id="campo-peso">
+                                    <label class="at-form-label" for="pesoCarregado">Peso / Volume Carregado <span th:if="${maquina.tipo == 'Pulverizador' || maquina.tipo == 'Semeadeira'}" class="required">*</span></label>
+                                    <input type="number" step="0.1" id="pesoCarregado" name="pesoCarregado" class="at-form-control" placeholder="Ex: 500.5">
+                                </div>
+                            </div>
+                            
+                            <div id="campos-encerrar-operacao" style="display: none; padding: 12px; background: #f8fafc; border-radius: 6px; margin-bottom: 16px; border: 1px solid #e2e8f0;">
+                                <p style="font-size: 0.85rem; color: var(--at-text-secondary); margin-bottom: 12px;">Preencha os dados de encerramento da operação.</p>
+                                <div class="at-form-group">
+                                    <label class="at-form-label" for="hodometroFim">Hodômetro Final (h) <span class="required">*</span></label>
+                                    <input type="number" step="0.1" id="hodometroFim" name="hodometroFim" class="at-form-control">
+                                    <span class="at-form-hint">Hodômetro de início: <span th:text="${maquina.hodometroInicial}"></span>h</span>
+                                </div>
+                                <div class="at-form-group">
+                                    <label class="at-form-label" for="observacoes">Observações / Relatório <span class="required">*</span></label>
+                                    <textarea id="observacoes" name="observacoes" class="at-form-control" rows="3" placeholder="Descreva as atividades realizadas..."></textarea>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">Atualizar Status</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="at-card">
+                    <div class="at-card-header">
+                        <h2 class="at-card-title">Últimas Operações</h2>
+                    </div>
+                    <div class="at-card-body" style="padding: 0;">
+                        <div th:if="${#lists.isEmpty(historico)}" style="padding: 24px; text-align: center; color: var(--at-text-muted);">
+                            Nenhuma operação registrada.
+                        </div>
+                        <div class="history-list" th:if="${!#lists.isEmpty(historico)}" style="margin: 0; border: none; border-radius: 0;">
+                            <div class="history-item" th:each="r : ${historico}">
+                                <div class="history-date">
+                                    <span th:text="${r.dataInicio.replace('T', ' ').substring(0, 16)}">Data Inicio</span>
+                                    <span th:if="${r.dataFim}"> até <span th:text="${r.dataFim.replace('T', ' ').substring(0, 16)}">Data Fim</span></span>
+                                    <span th:unless="${r.dataFim}" class="at-badge at-badge-info" style="font-size: 0.65rem; padding: 2px 6px;">Em Andamento</span>
+                                </div>
+                                <div class="history-body">
+                                    <div class="history-info">
+                                        Operador: <strong th:text="${r.nomeOperador}">Nome</strong>
+                                        <div style="font-size: 0.8rem; margin-top: 4px;" th:if="${r.observacoes}" th:text="${r.observacoes}">Obs</div>
+                                    </div>
+                                    <div class="history-stats" th:if="${r.dataFim}">
+                                        <div th:if="${r.horasOperadas}"><strong th:text="${r.horasOperadas} + 'h'">1.5h</strong></div>
+                                        <div th:if="${r.kmRodados}"><span th:text="${r.kmRodados} + ' un rodadas'">10</span></div>
+                                        <div th:if="${r.pesoCarregado}"><span th:text="${r.pesoCarregado} + ' kg/L'">100</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 16px;">
+                <a th:href="@{/maquinas}" class="btn btn-outline">Voltar</a>
+            </div>
+        </main>
+        <div th:replace="~{fragments/layout :: footer}"></div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script>
+    function toggleCampos(novoStatus, statusAtual, tipoMaquina) {
+        var iniciar = document.getElementById('campos-iniciar-operacao');
+        var encerrar = document.getElementById('campos-encerrar-operacao');
+        
+        iniciar.style.display = 'none';
+        encerrar.style.display = 'none';
+        
+        if (novoStatus === 'Em Operacao') {
+            iniciar.style.display = 'block';
+        } else if (statusAtual === 'Em Operacao' && novoStatus !== '') {
+            encerrar.style.display = 'block';
+        }
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <title>AgroTrack — Notificações</title>
+    <meta charset="UTF-8">
+    <th:block th:replace="~{fragments/layout :: head-content}"></th:block>
+    <style>
+        .notif-card { background: var(--at-surface); border: 1px solid var(--at-border); border-radius: var(--at-radius); padding: 16px; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 16px; }
+        .notif-card.nao-lida { border-left: 4px solid var(--at-primary); background: #f8fafc; }
+        .notif-icon { font-size: 1.5rem; }
+        .notif-icon.anomalia { color: var(--at-danger); }
+        .notif-icon.alerta_preventivo { color: var(--at-warning); }
+        .notif-icon.ordem { color: var(--at-info); }
+        .notif-content { flex: 1; }
+        .notif-title { font-weight: 600; margin-bottom: 4px; color: var(--at-text); }
+        .notif-date { font-size: 0.8rem; color: var(--at-text-muted); margin-bottom: 8px; }
+        .notif-message { font-size: 0.95rem; color: var(--at-text-secondary); }
+    </style>
+</head>
+<body>
+<div class="at-sidebar-overlay" id="sidebarOverlay"></div>
+<div class="at-wrapper">
+    <div th:replace="~{fragments/layout :: sidebar}"></div>
+    <div class="at-main">
+        <div th:replace="~{fragments/layout :: topbar('Notificações')}"></div>
+        <main class="at-content">
+            <div class="at-page-header">
+                <h1 class="at-page-title">Notificações</h1>
+                <p class="at-page-subtitle">Acompanhe seus alertas e mensagens importantes.</p>
+            </div>
+
+            <div th:if="${errorMessage}" class="at-alert at-alert-danger" role="alert">
+                <i class="bi bi-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
+            </div>
+
+            <div th:if="${#lists.isEmpty(notificacoes)}" style="text-align: center; padding: 40px; color: var(--at-text-muted);">
+                Você não possui nenhuma notificação.
+            </div>
+
+            <div th:each="n : ${notificacoes}" class="notif-card" th:classappend="${!n.lida} ? 'nao-lida' : ''">
+                <div class="notif-icon" 
+                     th:classappend="${n.tipo == 'anomalia' ? 'anomalia bi-exclamation-triangle-fill' : (n.tipo == 'alerta_preventivo' ? 'alerta_preventivo bi-cone-striped' : 'ordem bi-info-circle-fill')}">
+                </div>
+                <div class="notif-content">
+                    <div class="notif-title" th:text="${n.tipo.toUpperCase().replace('_', ' ')}">TIPO</div>
+                    <div class="notif-date" th:text="${n.dataCriacao.replace('T', ' ').substring(0, 16)}">Data</div>
+                    <div class="notif-message" th:text="${n.mensagem}">Mensagem</div>
+                </div>
+                <div th:if="${!n.lida}">
+                    <form th:action="@{/notificacoes/{id}/lida(id=${n.id})}" method="post">
+                        <button type="submit" class="btn btn-ghost btn-sm" title="Marcar como lida">
+                            <i class="bi bi-check-all" style="font-size: 1.2rem; color: var(--at-primary);"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </main>
+        <div th:replace="~{fragments/layout :: footer}"></div>
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

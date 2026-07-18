@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <title>AgroTrack — Nova Ordem de Manutenção</title>
+    <meta charset="UTF-8">
+    <th:block th:replace="~{fragments/layout :: head-content}"></th:block>
+</head>
+<body>
+<div class="at-sidebar-overlay" id="sidebarOverlay"></div>
+<div class="at-wrapper">
+    <div th:replace="~{fragments/layout :: sidebar}"></div>
+    <div class="at-main">
+        <div th:replace="~{fragments/layout :: topbar('Nova Ordem de Manutenção')}"></div>
+        <main class="at-content">
+            <div class="at-page-header">
+                <h1 class="at-page-title">Nova Ordem de Manutenção</h1>
+                <p class="at-page-subtitle">Preencha os dados abaixo para registrar uma ordem de manutenção.</p>
+            </div>
+
+            <div th:if="${errorMessage}" class="at-alert at-alert-danger" role="alert">
+                <i class="bi bi-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
+            </div>
+
+            <form th:action="@{/ordens/nova}" method="post" class="at-form-container">
+                <div class="at-form-group">
+                    <label class="at-form-label">Máquina <span class="required">*</span></label>
+                    <select name="idMaquina" class="at-form-control" required>
+                        <option value="">Selecione uma máquina...</option>
+                        <option th:each="m : ${maquinas}" th:value="${m.id}" th:text="${m.nome} + ' (' + ${m.tipo} + ')'"></option>
+                    </select>
+                </div>
+
+                <div class="at-form-group">
+                    <label class="at-form-label">Urgência da Falha <span class="required">*</span></label>
+                    <select name="urgencia" class="at-form-control" required>
+                        <option value="Baixa">Baixa (Manutenção de Rotina)</option>
+                        <option value="Media">Média (Requer atenção em breve)</option>
+                        <option value="Alta">Alta (Impede a operação parcial)</option>
+                        <option value="Critica">Crítica (Pane total / Risco de acidente)</option>
+                    </select>
+                    <div class="at-form-help">A prioridade final será calculada levando em conta o nível de risco atual da máquina.</div>
+                </div>
+
+                <div class="at-form-group">
+                    <label class="at-form-label">Descrição do Problema <span class="required">*</span></label>
+                    <textarea name="descricao" class="at-form-control" rows="4" required placeholder="Ex: Motor superaquecendo após 2 horas de trabalho..."></textarea>
+                </div>
+
+                <div class="at-form-actions">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Registrar Ordem</button>
+                    <a th:href="@{/ordens}" class="btn btn-outline">Cancelar</a>
+                </div>
+            </form>
+        </main>
+        <div th:replace="~{fragments/layout :: footer}"></div>
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

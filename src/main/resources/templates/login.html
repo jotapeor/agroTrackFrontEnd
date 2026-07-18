@@ -5,18 +5,151 @@
     <title>AgroTrack — Login</title>
     <link rel="icon" type="image/png" th:href="@{/icon.png}">
     <th:block th:replace="~{fragments/layout :: head-content}"></th:block>
+    <style>
+        .at-login-page {
+            min-height: 100vh;
+            display: flex;
+            background: #0a1710;
+        }
+        .at-login-visual {
+            flex: 1.2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 40px;
+            background: url('/background3.png') no-repeat center center;
+            background-size: cover;
+            position: relative;
+        }
+        .at-login-visual::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(22,163,74,0.4) 0%, rgba(10,23,16,0.9) 100%);
+            z-index: 1;
+        }
+        .login-visual-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+        }
+        .at-login-logo-text {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: -1px;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .at-login-logo-text span { color: #4ade80; }
+        .at-login-tagline {
+            font-size: 1.2rem;
+            color: rgba(255,255,255,0.9);
+            max-width: 400px;
+            line-height: 1.6;
+            margin-top: 20px;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        }
+        
+        .at-login-panel {
+            flex: 0.8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            background: #111f16;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+            position: relative;
+            z-index: 2;
+        }
+        .at-login-box {
+            width: 100%;
+            max-width: 360px;
+        }
+        .at-login-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+        .at-login-subtitle {
+            font-size: 0.95rem;
+            color: rgba(167, 201, 183, 0.7);
+            margin-bottom: 35px;
+        }
+        
+        .at-login-box .at-form-group {
+            margin-bottom: 20px;
+        }
+        .at-login-box .at-form-label {
+            color: #a7c9b7;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+        .at-login-box .at-form-control {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(74,222,128,0.2);
+            color: #fff;
+            padding: 12px 14px 12px 40px;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        .at-login-box .at-form-control:focus {
+            background: rgba(255,255,255,0.08);
+            border-color: #4ade80;
+            box-shadow: 0 0 0 3px rgba(74,222,128,0.1);
+        }
+        .at-login-box .at-input-icon {
+            color: #4ade80;
+            left: 14px;
+        }
+        .at-login-box .btn-primary {
+            background: #16a34a;
+            padding: 14px;
+            font-size: 1.05rem;
+            border-radius: 6px;
+            margin-top: 10px;
+            transition: background 0.3s, transform 0.2s;
+        }
+        .at-login-box .btn-primary:hover:not(:disabled) {
+            background: #15803d;
+            transform: translateY(-2px);
+        }
+        .at-login-box .btn-primary:disabled {
+            background: rgba(22,163,74,0.5);
+        }
+        
+        .back-home {
+            display: inline-block;
+            margin-top: 20px;
+            color: #a7c9b7;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        .back-home:hover {
+            color: #4ade80;
+        }
+
+        @media (max-width: 900px) {
+            .at-login-visual { display: none; }
+            .at-login-panel { flex: 1; }
+        }
+    </style>
 </head>
 <body>
 <div class="at-login-page">
     <div class="at-login-visual">
-        <span class="at-login-logo-text">Agro<span>Track</span></span>
-        <p class="at-login-tagline">Gestão de máquinas e frota agrícola para sua propriedade.</p>
+        <div class="login-visual-content">
+            <span class="at-login-logo-text">Agro<span>Track</span></span>
+            <p class="at-login-tagline">Gestão inteligente e controle total da sua frota agrícola, direto da fazenda para a palma da sua mão.</p>
+        </div>
     </div>
     <div class="at-login-panel">
         <div class="at-login-box">
-            <h1 class="at-login-title">Entrar</h1>
+            <h1 class="at-login-title">Bem-vindo(a)</h1>
             <p class="at-login-subtitle">Acesse o painel com seus dados</p>
-            <div th:if="${errorMessage}" class="at-alert at-alert-danger" role="alert">
+            <div th:if="${errorMessage}" class="at-alert at-alert-danger" role="alert" style="border-radius: 6px;">
                 <i class="bi bi-exclamation-circle"></i>
                 <span th:text="${errorMessage}">Credenciais inválidas.</span>
             </div>
@@ -32,14 +165,17 @@
                     <label class="at-form-label" for="senha">Senha <span class="required">*</span></label>
                     <div class="at-input-wrapper">
                         <i class="bi bi-lock at-input-icon"></i>
-                        <input type="password" id="senha" name="senha" class="at-form-control" placeholder="Senha" autocomplete="current-password" required />
-                        <button type="button" class="at-input-action" onclick="toggleSenha(this)" aria-label="Mostrar ou ocultar senha">
+                        <input type="password" id="senha" name="senha" class="at-form-control" placeholder="••••••••" autocomplete="current-password" required />
+                        <button type="button" class="at-input-action" onclick="toggleSenha(this)" aria-label="Mostrar ou ocultar senha" style="color: #a7c9b7;">
                             <i class="bi bi-eye"></i>
                         </button>
                     </div>
                 </div>
-                <button type="submit" id="btn-logar" class="btn btn-primary btn-block btn-lg" style="margin-top:8px;" disabled>Entrar</button>
+                <button type="submit" id="btn-logar" class="btn btn-primary btn-block btn-lg" disabled>Entrar no Sistema</button>
             </form>
+            <div class="text-center">
+                <a th:href="@{/}" class="back-home"><i class="bi bi-arrow-left"></i> Voltar para a Home</a>
+            </div>
         </div>
     </div>
 </div>
