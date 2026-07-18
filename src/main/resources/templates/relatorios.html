@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <title>AgroTrack — Relatórios & Análises</title>
+    <meta charset="UTF-8">
+    <meta name="description" content="AgroTrack — Visão Financeira e Operacional da Frota">
+    <link rel="icon" type="image/png" th:href="@{/icon.png}">
+    <th:block th:replace="~{fragments/layout :: head-content}"></th:block>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        .filter-group { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 180px; }
+        .filter-group label { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; }
+
+        .chart-wrapper {
+            flex: 1;
+            position: relative;
+            min-height: 300px;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 32px;
+            margin-bottom: 32px;
+        }
+        @media (max-width: 768px) {
+            .chart-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="at-sidebar-overlay" id="sidebarOverlay"></div>
+<div class="at-wrapper">
+    <div th:replace="~{fragments/layout :: sidebar}"></div>
+    <div class="at-main">
+        <div th:replace="~{fragments/layout :: topbar('Relatórios')}"></div>
+        <main class="at-content" id="main-content">
+            <div class="at-page-header fade-in">
+                <h1 class="at-page-title">Painel de Análise</h1>
+                <p class="at-page-subtitle">Inteligência de dados e visão operacional unificada</p>
+            </div>
+
+            <div class="at-panel-glass fade-in delay-1">
+                <div class="filter-group">
+                    <label for="dataInicio">Data Inicial</label>
+                    <input type="date" id="dataInicio" class="at-form-control">
+                </div>
+                <div class="filter-group">
+                    <label for="dataFim">Data Final</label>
+                    <input type="date" id="dataFim" class="at-form-control">
+                </div>
+                <div class="filter-group">
+                    <label for="idMaquina">Filtrar Máquina</label>
+                    <select id="idMaquina" class="at-form-control at-form-select">
+                        <option value="">Todas as Máquinas</option>
+                        <option th:each="m : ${maquinas}" th:value="${m.id}" th:text="${m.nome}"></option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="idOperador">Filtrar Operador</label>
+                    <select id="idOperador" class="at-form-control at-form-select">
+                        <option value="">Todos os Operadores</option>
+                        <option th:each="o : ${operadores}" th:value="${o.id_usuario}" th:text="${o.nome}"></option>
+                    </select>
+                </div>
+                <div>
+                    <button class="btn btn-primary" onclick="loadAllCharts()">
+                        <i class="bi bi-magic"></i> Atualizar Dados
+                    </button>
+                </div>
+            </div>
+
+            <div class="chart-grid">
+
+                <div class="at-card fade-in delay-2" style="padding: 24px;">
+                    <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 24px; color: #1e293b; display: flex; align-items: center; gap: 12px;"><i class="bi bi-fuel-pump" style="color: #4f46e5; background: #eef2ff; padding: 10px; border-radius: 12px; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.1);"></i> Eficiência de Consumo (L/h ou L/km)</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="chartConsumo"></canvas>
+                    </div>
+                </div>
+
+                <div class="at-card fade-in delay-3" style="padding: 24px;">
+                    <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 24px; color: #1e293b; display: flex; align-items: center; gap: 12px;"><i class="bi bi-shield-exclamation" style="color: #4f46e5; background: #eef2ff; padding: 10px; border-radius: 12px; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.1);"></i> Matriz de Risco Operacional</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="chartRisco"></canvas>
+                    </div>
+                </div>
+
+                <div class="at-card fade-in delay-4" style="padding: 24px;">
+                    <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 24px; color: #1e293b; display: flex; align-items: center; gap: 12px;"><i class="bi bi-tools" style="color: #4f46e5; background: #eef2ff; padding: 10px; border-radius: 12px; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.1);"></i> Volume de Manutenções</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="chartOrdens"></canvas>
+                    </div>
+                </div>
+
+                <div class="at-card fade-in delay-5" style="padding: 24px;">
+                    <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 24px; color: #1e293b; display: flex; align-items: center; gap: 12px;"><i class="bi bi-activity" style="color: #4f46e5; background: #eef2ff; padding: 10px; border-radius: 12px; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.1);"></i> Linha do Tempo de Ocorrências</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="chartAlertas"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="at-card fade-in delay-5" style="padding: 24px;">
+                <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 24px; color: #1e293b; display: flex; align-items: center; gap: 12px;"><i class="bi bi-bar-chart-steps" style="color: #4f46e5; background: #eef2ff; padding: 10px; border-radius: 12px; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.1);"></i> Desempenho: Horas Operadas vs Km Rodados</h3>
+                <div class="chart-wrapper" style="min-height: 350px;">
+                    <canvas id="chartHorasKm"></canvas>
+                </div>
+            </div>
+
+        </main>
+        <div th:replace="~{fragments/layout :: footer}"></div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+<script>
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.color = '#64748b';
+    Chart.defaults.scale.grid.color = '#f1f5f9';
+    Chart.defaults.scale.grid.borderColor = 'transparent';
+    Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 23, 42, 0.9)';
+    Chart.defaults.plugins.tooltip.titleFont = { size: 14, weight: 'bold', family: "'Inter', sans-serif" };
+    Chart.defaults.plugins.tooltip.bodyFont = { size: 13, family: "'Inter', sans-serif" };
+    Chart.defaults.plugins.tooltip.padding = 12;
+    Chart.defaults.plugins.tooltip.cornerRadius = 8;
+    Chart.defaults.plugins.tooltip.boxPadding = 6;
+
+    let chartConsumoInstance = null;
+    let chartRiscoInstance = null;
+    let chartOrdensInstance = null;
+    let chartAlertasInstance = null;
+    let chartHorasKmInstance = null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const hoje = new Date();
+        const trintaDiasAtras = new Date();
+        trintaDiasAtras.setDate(hoje.getDate() - 30);
+
+        document.getElementById('dataFim').value = hoje.toISOString().split('T')[0];
+        document.getElementById('dataInicio').value = trintaDiasAtras.toISOString().split('T')[0];
+
+        loadAllCharts();
+    });
+
+    function getQueryParams(includeMaquinaOperador = false) {
+        const inicio = document.getElementById('dataInicio').value;
+        const fim = document.getElementById('dataFim').value;
+        let query = `?dataInicio=${inicio}&dataFim=${fim}`;
+        if (includeMaquinaOperador) {
+            const maq = document.getElementById('idMaquina').value;
+            const op = document.getElementById('idOperador').value;
+            if (maq) query += `&idMaquina=${maq}`;
+            if (op) query += `&idOperador=${op}`;
+        }
+        return query;
+    }
+
+    function createGradient(ctx, colorStart, colorEnd) {
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, colorStart);
+        gradient.addColorStop(1, colorEnd);
+        return gradient;
+    }
+
+    function loadConsumo() {
+        fetch('/api/front/relatorios/consumo-por-maquina' + getQueryParams())
+            .then(res => res.json())
+            .then(data => {
+                const labels = data.map(d => d.nomeMaquina);
+                const values = data.map(d => d.consumoMedio);
+
+                const ctx = document.getElementById('chartConsumo').getContext('2d');
+                if (chartConsumoInstance) chartConsumoInstance.destroy();
+
+                chartConsumoInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Consumo Médio',
+                            data: values,
+                            backgroundColor: createGradient(ctx, 'rgba(56, 189, 248, 0.85)', 'rgba(2, 132, 199, 0.85)'),
+                            borderRadius: 6,
+                            barThickness: 'flex',
+                            maxBarThickness: 45
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+            });
+    }
+
+    function loadRisco() {
+        fetch('/api/front/relatorios/risco-distribuicao' + getQueryParams())
+            .then(res => res.json())
+            .then(data => {
+                const labels = Object.keys(data);
+                const values = Object.values(data);
+
+                const colors = labels.map(l => {
+                    if (l === 'Alto') return '#ef4444';
+                    if (l === 'Medio') return '#f59e0b';
+                    return '#10b981';
+                });
+
+                const ctx = document.getElementById('chartRisco').getContext('2d');
+                if (chartRiscoInstance) chartRiscoInstance.destroy();
+
+                chartRiscoInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: values,
+                            backgroundColor: colors,
+                            borderWidth: 0,
+                            hoverOffset: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%',
+                        plugins: {
+                            legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' } }
+                        }
+                    }
+                });
+            });
+    }
+
+    function loadOrdens() {
+        fetch('/api/front/relatorios/ordens-por-status' + getQueryParams())
+            .then(res => res.json())
+            .then(data => {
+                const labels = Object.keys(data);
+                const values = Object.values(data);
+
+                const ctx = document.getElementById('chartOrdens').getContext('2d');
+                if (chartOrdensInstance) chartOrdensInstance.destroy();
+
+                chartOrdensInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Qtd. Ordens',
+                            data: values,
+                            backgroundColor: createGradient(ctx, 'rgba(167, 139, 250, 0.9)', 'rgba(109, 40, 217, 0.9)'),
+                            borderRadius: 6,
+                            maxBarThickness: 45
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                    }
+                });
+            });
+    }
+
+    function loadAlertas() {
+        fetch('/api/front/relatorios/alertas-timeline' + getQueryParams())
+            .then(res => res.json())
+            .then(data => {
+                const datesSet = new Set(data.map(d => d.data));
+                const dates = Array.from(datesSet).sort();
+
+                const preventivoData = dates.map(dt => {
+                    const found = data.find(d => d.data === dt && d.tipo === 'alerta_preventivo');
+                    return found ? found.quantidade : 0;
+                });
+                const anomaliaData = dates.map(dt => {
+                    const found = data.find(d => d.data === dt && d.tipo === 'anomalia');
+                    return found ? found.quantidade : 0;
+                });
+
+                const ctx = document.getElementById('chartAlertas').getContext('2d');
+                if (chartAlertasInstance) chartAlertasInstance.destroy();
+
+                chartAlertasInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: dates,
+                        datasets: [
+                            {
+                                label: 'Alerta Preventivo',
+                                data: preventivoData,
+                                borderColor: '#f59e0b',
+                                backgroundColor: createGradient(ctx, 'rgba(245, 158, 11, 0.25)', 'rgba(245, 158, 11, 0.0)'),
+                                fill: true,
+                                tension: 0.4,
+                                pointBackgroundColor: '#fff',
+                                pointBorderWidth: 2,
+                                pointRadius: 4,
+                                pointHoverRadius: 6
+                            },
+                            {
+                                label: 'Anomalia',
+                                data: anomaliaData,
+                                borderColor: '#ef4444',
+                                backgroundColor: createGradient(ctx, 'rgba(239, 68, 68, 0.25)', 'rgba(239, 68, 68, 0.0)'),
+                                fill: true,
+                                tension: 0.4,
+                                pointBackgroundColor: '#fff',
+                                pointBorderWidth: 2,
+                                pointRadius: 4,
+                                pointHoverRadius: 6
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle' } }
+                        },
+                        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+                        interaction: { intersect: false, mode: 'index' }
+                    }
+                });
+            });
+    }
+
+    function loadHorasKm() {
+        fetch('/api/front/relatorios/horas-km' + getQueryParams(true))
+            .then(res => res.json())
+            .then(data => {
+                const labels = data.map(d => d.nomeMaquina + " (" + d.nomeOperador + ")");
+                const horas = data.map(d => d.totalHoras);
+                const kms = data.map(d => d.totalKm);
+
+                const ctx = document.getElementById('chartHorasKm').getContext('2d');
+                if (chartHorasKmInstance) chartHorasKmInstance.destroy();
+
+                chartHorasKmInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Horas Operadas',
+                                data: horas,
+                                backgroundColor: createGradient(ctx, 'rgba(52, 211, 153, 0.9)', 'rgba(5, 150, 105, 0.9)'),
+                                borderRadius: 6,
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'Km Rodados',
+                                data: kms,
+                                backgroundColor: createGradient(ctx, 'rgba(96, 165, 250, 0.9)', 'rgba(37, 99, 235, 0.9)'),
+                                borderRadius: 6,
+                                yAxisID: 'y1'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'top', labels: { usePointStyle: true, pointStyle: 'circle' } }
+                        },
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: {display: true, text: 'Horas (h)', font: {weight: 'bold'}}
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                grid: {drawOnChartArea: false},
+                                title: {display: true, text: 'Quilômetros (km)', font: {weight: 'bold'}}
+                            }
+                        }
+                    }
+                });
+            });
+    }
+</script>
+</body>
+</html>

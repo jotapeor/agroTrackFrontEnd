@@ -8,8 +8,8 @@
     <th:block th:replace="~{fragments/layout :: head-content}"></th:block>
     <style>
         .machine-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:16px; }
-        .machine-card { background:var(--at-surface); border:1px solid var(--at-border); display:flex; flex-direction:column; transition:box-shadow .2s; }
-        .machine-card:hover { box-shadow:0 2px 12px rgba(0,0,0,0.08); }
+        .machine-card { background:var(--at-surface); border:1px solid var(--at-border); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(148, 163, 184, 0.08); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease; display:flex; flex-direction:column; }
+        .machine-card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(148, 163, 184, 0.12); }
         .machine-card-photo { width:100%; height:160px; object-fit:cover; background:#f0fdf4; display:flex; align-items:center; justify-content:center; color:var(--at-text-muted); font-size:3rem; border-bottom:1px solid var(--at-border); }
         .machine-card-photo img { width:100%; height:100%; object-fit:cover; }
         .machine-card-body { padding:14px; flex:1; display:flex; flex-direction:column; }
@@ -29,7 +29,7 @@
     <div class="at-main">
         <div th:replace="~{fragments/layout :: topbar('Máquinas')}"></div>
         <main class="at-content" id="main-content">
-            <div class="at-page-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div class="at-page-header fade-in" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
                 <div>
                     <h1 class="at-page-title">Máquinas</h1>
                     <p class="at-page-subtitle" th:text="${#lists.size(maquinas) + ' máquina(s) cadastrada(s).'}">0 máquinas.</p>
@@ -47,7 +47,7 @@
             </div>
 
             <div class="machine-grid">
-                <div class="machine-card" th:each="m : ${maquinas}" th:if="${!#lists.isEmpty(maquinas)}">
+                <div class="machine-card fade-in" th:each="m, iterStat : ${maquinas}" th:if="${!#lists.isEmpty(maquinas)}" th:style="'animation-delay: ' + ${#numbers.formatDecimal(iterStat.index * 0.05, 1, 2, 'POINT')} + 's'">
                     <div class="machine-card-photo">
                         <img th:if="${m.fotoPath}" th:src="'http://localhost:8080/uploads/maquinas/' + ${m.fotoPath}" alt="Foto" />
                         <i th:unless="${m.fotoPath}" class="bi bi-truck"></i>
@@ -68,12 +68,20 @@
                             <a th:href="@{/maquinas/{id}/status(id=${m.id})}" class="btn btn-outline btn-sm" style="flex:1; border-color:var(--at-primary); color:var(--at-primary);">
                                 <i class="bi bi-arrow-repeat"></i> Status/Operação
                             </a>
+                            <th:block th:if="${(session.role == 'PROPRIETARIO' or session.role == 'SOCIO') and m.status == 'Em Operacao'}">
+                                <a th:href="@{/maquinas/{id}/telemetria(id=${m.id})}" class="btn btn-outline btn-sm" style="flex:1; border-color:var(--at-info); color:var(--at-info);" title="Telemetria em Tempo Real">
+                                    <i class="bi bi-activity"></i> Telemetria
+                                </a>
+                            </th:block>
+                            <a th:href="@{/maquinas/{id}/detalhes(id=${m.id})}" class="btn btn-outline btn-sm" style="color:var(--at-info); border-color:var(--at-info);" title="Histórico Completo">
+                                <i class="bi bi-clock-history"></i>
+                            </a>
                             <th:block th:if="${session.role == 'PROPRIETARIO'}">
                                 <a th:href="@{/maquinas/editar/{id}(id=${m.id})}" class="btn btn-outline btn-sm">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <button type="button" class="btn btn-outline btn-sm" style="color:var(--at-danger);" th:data-id="${m.id}" th:data-nome="${m.nome}" onclick="confirmarExclusao(this)">
-                                    <i class="bi bi-trash"></i>
+                                <button type="button" class="btn btn-outline btn-sm" style="color:var(--at-danger);" th:data-id="${m.id}" th:data-nome="${m.nome}" onclick="confirmarExclusao(this)" title="Arquivar Máquina">
+                                    <i class="bi bi-archive"></i>
                                 </button>
                             </th:block>
                         </div>
@@ -94,17 +102,16 @@
     </div>
 </div>
 
-
 <div id="confirmModal" class="confirm-modal-overlay" style="display:none;">
     <div class="confirm-modal">
         <div class="confirm-modal-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
-        <div class="confirm-modal-title">Excluir Máquina</div>
-        <div class="confirm-modal-text" id="confirmModalText">Tem certeza que deseja excluir esta máquina? Esta ação não pode ser desfeita.</div>
+        <div class="confirm-modal-title">Arquivar Máquina</div>
+        <div class="confirm-modal-text" id="confirmModalText">Tem certeza que deseja arquivar esta máquina? O registro não será apagado permanentemente.</div>
         <div class="confirm-modal-actions">
             <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
             <form id="confirmDeleteForm" method="post" style="display:inline;">
                 <button type="submit" class="btn btn-primary" style="background:var(--at-danger); border-color:var(--at-danger);">
-                    <i class="bi bi-trash"></i> Excluir
+                    <i class="bi bi-archive"></i> Arquivar
                 </button>
             </form>
         </div>
@@ -116,7 +123,7 @@
     function confirmarExclusao(btn) {
         var id = btn.getAttribute('data-id');
         var nome = btn.getAttribute('data-nome');
-        document.getElementById('confirmModalText').textContent = 'Tem certeza que deseja excluir "' + nome + '"? Esta ação não pode ser desfeita.';
+        document.getElementById('confirmModalText').textContent = 'Tem certeza que deseja arquivar "' + nome + '"? O registro não será apagado permanentemente.';
         document.getElementById('confirmDeleteForm').action = '/maquinas/excluir/' + id;
         document.getElementById('confirmModal').style.display = 'flex';
     }

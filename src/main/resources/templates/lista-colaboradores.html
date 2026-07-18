@@ -15,15 +15,18 @@
         .person-card {
             background: var(--at-surface);
             border: 1px solid var(--at-border);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(148, 163, 184, 0.08);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease;
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
             padding: 24px 16px 16px;
-            transition: box-shadow .2s;
         }
         .person-card:hover {
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            transform: translateY(-6px);
+            box-shadow: 0 20px 40px rgba(148, 163, 184, 0.12);
         }
         .person-avatar {
             width: 80px;
@@ -84,7 +87,7 @@
     <div class="at-main">
         <div th:replace="~{fragments/layout :: topbar('Colaboradores')}"></div>
         <main class="at-content" id="main-content">
-            <div class="at-page-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div class="at-page-header fade-in" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
                 <div>
                     <h1 class="at-page-title">Colaboradores</h1>
                     <p class="at-page-subtitle" th:text="${#lists.size(colaboradores) + ' colaborador(es) cadastrado(s).'}">0 colaboradores.</p>
@@ -102,7 +105,7 @@
             </div>
 
             <div class="people-grid">
-                <div class="person-card" th:each="c : ${colaboradores}" th:if="${!#lists.isEmpty(colaboradores)}">
+                <div class="person-card fade-in" th:each="c, iterStat : ${colaboradores}" th:if="${!#lists.isEmpty(colaboradores)}" th:style="'animation-delay: ' + ${#numbers.formatDecimal(iterStat.index * 0.05, 1, 2, 'POINT')} + 's'">
                     <div class="person-avatar">
                         <img th:if="${c.foto_path}" th:src="'http://localhost:8080/uploads/usuarios/' + ${c.foto_path}" alt="Foto" />
                         <i th:unless="${c.foto_path}" class="bi bi-person"></i>
@@ -120,19 +123,19 @@
                     </div>
 
                     <div class="person-actions">
-                        <!-- PROPRIETARIO: edita todos -->
+
                         <a th:if="${session.role == 'PROPRIETARIO'}"
                            th:href="@{/colaboradores/editar/{id}(id=${c.id_usuario})}"
                            class="btn btn-outline btn-sm">
                             <i class="bi bi-pencil"></i> Editar / Vincular
                         </a>
-                        <!-- SOCIO: edita apenas OPERADOR -->
+
                         <a th:if="${session.role == 'SOCIO' && c.perfil == 'OPERADOR'}"
                            th:href="@{/colaboradores/editar/{id}(id=${c.id_usuario})}"
                            class="btn btn-outline btn-sm">
                             <i class="bi bi-pencil"></i> Editar / Vincular
                         </a>
-                        <!-- SOCIO vendo PROPRIETARIO ou SOCIO, ou OPERADOR logado: sem ação -->
+
                         <span th:if="${session.role == 'OPERADOR' || (session.role == 'SOCIO' && c.perfil != 'OPERADOR')}"
                               style="font-size:.8rem; color:var(--at-text-muted);">—</span>
                     </div>

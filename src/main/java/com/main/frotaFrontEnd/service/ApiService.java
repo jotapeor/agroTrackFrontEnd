@@ -362,6 +362,15 @@ public class ApiService {
     }
 
     @SuppressWarnings("unchecked")
+    public java.util.List<java.util.Map<String, Object>> obterHistoricoCompleto(Long idMaquina, String token) {
+        return restClient.get()
+                .uri("/proprietario/maquinas/{id}/historico-completo", idMaquina)
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(java.util.List.class);
+    }
+
+    @SuppressWarnings("unchecked")
     public java.util.List<java.util.Map<String, Object>> listarOrdens(String token) {
         return restClient.get()
                 .uri("/manutencao/ordens")
@@ -401,6 +410,14 @@ public class ApiService {
                 .body(java.util.Map.of("observacao", observacao))
                 .retrieve()
                 .body(java.util.Map.class);
+    }
+
+    public String removerOrdem(Long idOrdem, String token) {
+        return restClient.delete()
+                .uri("/manutencao/ordens/{id}", idOrdem)
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(String.class);
     }
 
     @SuppressWarnings("unchecked")
@@ -487,5 +504,90 @@ public class ApiService {
                 throw new RuntimeException("Erro ao autorizar risco: " + e.getResponseBodyAsString());
             }
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.Map<String, Object> obterTelemetria(Long idMaquina, String token) {
+        return restClient.get()
+                .uri("/telemetria/maquina/{idMaquina}", idMaquina)
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(java.util.Map.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.List<java.util.Map<String, Object>> relatorioConsumo(String inicio, String fim, String token) {
+        String url = "/relatorios/consumo-por-maquina";
+        if (inicio != null && !inicio.isEmpty() && fim != null && !fim.isEmpty()) {
+            url += "?dataInicio=" + inicio + "&dataFim=" + fim;
+        }
+        return restClient.get()
+                .uri(url)
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(java.util.List.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.Map<String, Long> relatorioRisco(String inicio, String fim, String token) {
+        String url = "/relatorios/risco-distribuicao";
+        if (inicio != null && !inicio.isEmpty() && fim != null && !fim.isEmpty()) {
+            url += "?dataInicio=" + inicio + "&dataFim=" + fim;
+        }
+        return restClient.get()
+                .uri(url)
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(java.util.Map.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.Map<String, Long> relatorioOrdensPorStatus(String inicio, String fim, String token) {
+        String url = "/relatorios/ordens-por-status";
+        if (inicio != null && !inicio.isEmpty() && fim != null && !fim.isEmpty()) {
+            url += "?dataInicio=" + inicio + "&dataFim=" + fim;
+        }
+        return restClient.get()
+                .uri(url)
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(java.util.Map.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.List<java.util.Map<String, Object>> relatorioHorasKm(String inicio, String fim, Long idMaquina, Long idOperador, String token) {
+        StringBuilder url = new StringBuilder("/relatorios/horas-km?");
+        if (inicio != null && !inicio.isEmpty()) url.append("dataInicio=").append(inicio).append("&");
+        if (fim != null && !fim.isEmpty()) url.append("dataFim=").append(fim).append("&");
+        if (idMaquina != null) url.append("idMaquina=").append(idMaquina).append("&");
+        if (idOperador != null) url.append("idOperador=").append(idOperador).append("&");
+
+        return restClient.get()
+                .uri(url.toString())
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(java.util.List.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.List<java.util.Map<String, Object>> relatorioAlertasTimeline(String inicio, String fim, String token) {
+        String url = "/relatorios/alertas-timeline";
+        if (inicio != null && !inicio.isEmpty() && fim != null && !fim.isEmpty()) {
+            url += "?dataInicio=" + inicio + "&dataFim=" + fim;
+        }
+        return restClient.get()
+                .uri(url)
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(java.util.List.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.List<java.util.Map<String, Object>> listarTelemetriaEmOperacao(String token) {
+        return restClient.get()
+                .uri("/telemetria/em-operacao")
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(java.util.List.class);
     }
 }

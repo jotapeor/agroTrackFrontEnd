@@ -14,7 +14,7 @@
     <div class="at-main">
         <div th:replace="~{fragments/layout :: topbar('Cadastrar Máquina')}"></div>
         <main class="at-content" id="main-content">
-            <div class="at-page-header">
+            <div class="at-page-header fade-in">
                 <h1 class="at-page-title">Cadastrar Nova Máquina</h1>
                 <p class="at-page-subtitle">
                     Preencha os dados da máquina para registrá-la no sistema.
@@ -36,8 +36,7 @@
                   novalidate
                   id="form-nova-maquina">
 
-                
-                <div class="at-card" style="margin-bottom:16px;">
+                <div class="at-card fade-in delay-1" style="margin-bottom:16px;">
                     <div class="at-card-header">
                         <h2 class="at-card-title">1. Identificação da Máquina</h2>
                         <span class="at-badge at-badge-info">Dados principais</span>
@@ -116,8 +115,7 @@
                     </div>
                 </div>
 
-                
-                <div class="at-card" style="margin-bottom:16px;">
+                <div class="at-card fade-in delay-2" style="margin-bottom:16px;">
                     <div class="at-card-header">
                         <h2 class="at-card-title">2. Vínculo com a Fazenda</h2>
                         <span class="at-badge at-badge-neutral">Opcional</span>
@@ -146,8 +144,7 @@
                     </div>
                 </div>
 
-                
-                <div class="at-card" style="margin-bottom:16px;">
+                <div class="at-card fade-in delay-3" style="margin-bottom:16px;">
                     <div class="at-card-header">
                         <h2 class="at-card-title">3. Dados Técnicos</h2>
                         <span class="at-badge at-badge-warning">Manutenção Preditiva</span>
@@ -217,8 +214,7 @@
                     </div>
                 </div>
 
-                
-                <div class="at-card" style="margin-bottom:16px;">
+                <div class="at-card fade-in delay-4" style="margin-bottom:16px;">
                     <div class="at-card-header">
                         <h2 class="at-card-title">4. Status e Controle</h2>
                         <span class="at-badge at-badge-success">Padrão definido</span>
@@ -265,8 +261,7 @@
                     </div>
                 </div>
 
-                
-                <div class="at-card" style="margin-bottom:16px;">
+                <div class="at-card fade-in delay-5" style="margin-bottom:16px;">
                     <div class="at-card-header">
                         <h2 class="at-card-title">5. Complementares</h2>
                         <span class="at-badge at-badge-neutral">Opcional</span>
@@ -293,8 +288,7 @@
                     </div>
                 </div>
 
-                
-                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:24px;">
+                <div class="at-form-actions">
                     <button type="submit" class="btn btn-primary btn-lg" id="btn-cadastrar">
                         <i class="bi bi-truck"></i>
                         Cadastrar Máquina
@@ -312,7 +306,6 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
 
-        // ---- Preview de foto ----
         const fotoInput = document.getElementById('foto');
         const previewDiv = document.getElementById('foto-preview');
         const previewImg = document.getElementById('preview-img');
@@ -333,7 +326,6 @@
             });
         }
 
-        // ---- Carregar talhões conforme fazenda ----
         const fazendaSelect = document.getElementById('id_fazenda');
         const talhaoSelect = document.getElementById('id_talhao');
         if (fazendaSelect && talhaoSelect) {
@@ -363,7 +355,6 @@
             });
         }
 
-        // ---- Validação do formulário ----
         const form = document.getElementById('form-nova-maquina');
         const btn = document.getElementById('btn-cadastrar');
         if (form && btn) {

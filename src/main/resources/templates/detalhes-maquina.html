@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <title>AgroTrack — Histórico Completo</title>
+    <meta charset="UTF-8">
+    <th:block th:replace="~{fragments/layout :: head-content}"></th:block>
+    <style>
+
+        .premium-header {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.0));
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .premium-header-title h2 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--at-text);
+        }
+        .premium-header-subtitle {
+            font-size: 1rem;
+            color: var(--at-text-secondary);
+            margin-top: 4px;
+        }
+        .btn-premium {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #fff !important;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-premium:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+        }
+
+        .filter-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 24px;
+        }
+        .filter-select {
+            background: var(--at-surface);
+            border: 1px solid var(--at-border);
+            color: var(--at-text);
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            min-width: 200px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .timeline {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px 0;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 24px;
+            width: 2px;
+            background: var(--at-border);
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 24px;
+            padding-left: 60px;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+        .timeline-item.hidden {
+            display: none;
+        }
+        .timeline-icon {
+            position: absolute;
+            left: 8px;
+            top: 0;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.1rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            z-index: 1;
+        }
+        .timeline-content {
+            background: var(--at-surface);
+            border: 1px solid var(--at-border);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .timeline-content:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+        }
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .timeline-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--at-text);
+        }
+        .timeline-date {
+            font-size: 0.85rem;
+            color: var(--at-text-secondary);
+            background: rgba(0,0,0,0.04);
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+        .timeline-body {
+            font-size: 0.95rem;
+            color: var(--at-text);
+            margin-bottom: 8px;
+        }
+        .timeline-footer {
+            font-size: 0.85rem;
+            color: var(--at-text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .icon-TROCA_STATUS { background: #3b82f6; }
+        .icon-ABASTECIMENTO { background: #f59e0b; }
+        .icon-ORDEM_MANUTENCAO { background: #ef4444; }
+        .icon-AUTORIZACAO_RISCO { background: #8b5cf6; }
+        .icon-NOTIFICACAO { background: #64748b; }
+        .icon-REGISTRO_OPERACAO { background: #10b981; }
+        .icon-DEFAULT { background: #94a3b8; }
+    </style>
+</head>
+<body>
+<div class="at-sidebar-overlay" id="sidebarOverlay"></div>
+<div class="at-wrapper">
+    <div th:replace="~{fragments/layout :: sidebar}"></div>
+    <div class="at-main">
+        <div th:replace="~{fragments/layout :: topbar('Histórico Completo')}"></div>
+        <main class="at-content" id="main-content">
+
+            <a th:href="@{/maquinas}" class="btn btn-ghost" style="margin-bottom: 16px; color: var(--at-text-secondary);">
+                <i class="bi bi-arrow-left"></i> Voltar para Máquinas
+            </a>
+
+            <div class="premium-header fade-in">
+                <div class="premium-header-title">
+                    <h2 th:text="${maquina.nome}">Nome da Máquina</h2>
+                    <div class="premium-header-subtitle">
+                        <span th:text="${maquina.tipo}">Tipo</span> •
+                        Status Atual: <span th:text="${maquina.status}" style="font-weight: 600;">Status</span>
+                    </div>
+                </div>
+                <div class="premium-header-actions" th:if="${maquina.status == 'Em Operacao'}">
+                    <a th:href="@{/telemetria(maquina=${maquina.id})}" class="btn btn-primary">
+                        <i class="bi bi-activity"></i> Ver Telemetria
+                    </a>
+                </div>
+            </div>
+
+            <div class="filter-container fade-in delay-1">
+                <select class="filter-select" id="timelineFilter" onchange="filterTimeline()">
+                    <option value="Todos">Todos os Registros</option>
+                    <option value="TROCA_STATUS">Troca de Status</option>
+                    <option value="ABASTECIMENTO">Abastecimento</option>
+                    <option value="ORDEM_MANUTENCAO">Ordem de Manutenção</option>
+                    <option value="AUTORIZACAO_RISCO">Autorização de Risco</option>
+                    <option value="NOTIFICACAO">Notificação</option>
+                    <option value="REGISTRO_OPERACAO">Registro de Operação</option>
+                </select>
+            </div>
+
+            <div class="timeline fade-in delay-2" id="timelineContainer">
+                <div th:if="${#lists.isEmpty(historico)}" class="at-alert at-alert-info">
+                    <i class="bi bi-info-circle"></i> Nenhum registro encontrado no histórico desta máquina.
+                </div>
+
+                <div th:each="item, iterStat : ${historico}" class="timeline-item fade-in" th:attr="data-tipo=${item.tipo}" th:style="'animation-delay: ' + ${#numbers.formatDecimal(iterStat.index * 0.05, 1, 2, 'POINT')} + 's'">
+
+                    <div class="timeline-icon" th:classappend="'icon-' + ${item.tipo ?: 'DEFAULT'}">
+                        <i th:if="${item.tipo == 'TROCA_STATUS'}" class="bi bi-arrow-repeat"></i>
+                        <i th:if="${item.tipo == 'ABASTECIMENTO'}" class="bi bi-fuel-pump"></i>
+                        <i th:if="${item.tipo == 'ORDEM_MANUTENCAO'}" class="bi bi-tools"></i>
+                        <i th:if="${item.tipo == 'AUTORIZACAO_RISCO'}" class="bi bi-shield-exclamation"></i>
+                        <i th:if="${item.tipo == 'NOTIFICACAO'}" class="bi bi-bell"></i>
+                        <i th:if="${item.tipo == 'REGISTRO_OPERACAO'}" class="bi bi-journal-text"></i>
+                        <i th:unless="${item.tipo == 'TROCA_STATUS' or item.tipo == 'ABASTECIMENTO' or item.tipo == 'ORDEM_MANUTENCAO' or item.tipo == 'AUTORIZACAO_RISCO' or item.tipo == 'NOTIFICACAO' or item.tipo == 'REGISTRO_OPERACAO'}" class="bi bi-record-circle"></i>
+                    </div>
+
+                    <div class="timeline-content">
+                        <div class="timeline-header">
+                            <div class="timeline-title" th:text="${item.titulo ?: 'Registro'}">Título</div>
+                            <div class="timeline-date">
+                                <i class="bi bi-calendar3"></i>
+                                <span th:text="${item.data != null ? #strings.replace(item.data, 'T', ' ') : 'Data indisponível'}">Data</span>
+                            </div>
+                        </div>
+                        <div class="timeline-body" th:text="${item.descricao}">Descrição</div>
+                        <div class="timeline-footer" th:if="${item.responsavel}">
+                            <i class="bi bi-person-circle"></i>
+                            <span th:text="${item.responsavel}">Responsável</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+        <div th:replace="~{fragments/layout :: footer}"></div>
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script>
+    function filterTimeline() {
+        const filterValue = document.getElementById('timelineFilter').value;
+        const items = document.querySelectorAll('.timeline-item');
+
+        items.forEach(item => {
+            const itemType = item.getAttribute('data-tipo');
+            if (filterValue === 'Todos' || itemType === filterValue) {
+                item.classList.remove('hidden');
+            } else {
+                item.classList.add('hidden');
+            }
+        });
+    }
+</script>
+</body>
+</html>

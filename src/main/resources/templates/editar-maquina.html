@@ -14,7 +14,7 @@
     <div class="at-main">
         <div th:replace="~{fragments/layout :: topbar('Editar Máquina')}"></div>
         <main class="at-content" id="main-content">
-            <div class="at-page-header">
+            <div class="at-page-header fade-in">
                 <h1 class="at-page-title" th:text="'Editar: ' + ${maquina.nome}">Editar Máquina</h1>
                 <p class="at-page-subtitle">Altere os dados da máquina conforme necessário.</p>
             </div>
@@ -28,8 +28,7 @@
                   enctype="multipart/form-data"
                   novalidate>
 
-                
-                <div class="at-card" style="margin-bottom:16px;">
+                <div class="at-card fade-in delay-1" style="margin-bottom:16px;">
                     <div class="at-card-header">
                         <h2 class="at-card-title">Identificação da Máquina</h2>
                     </div>
@@ -82,8 +81,7 @@
                     </div>
                 </div>
 
-                
-                <div class="at-card" style="margin-bottom:16px;">
+                <div class="at-card fade-in delay-2" style="margin-bottom:16px;">
                     <div class="at-card-header">
                         <h2 class="at-card-title">Vínculo com a Fazenda</h2>
                     </div>
@@ -109,8 +107,7 @@
                     </div>
                 </div>
 
-                
-                <div class="at-card" style="margin-bottom:16px;">
+                <div class="at-card fade-in delay-3" style="margin-bottom:16px;">
                     <div class="at-card-header">
                         <h2 class="at-card-title">Dados Técnicos</h2>
                     </div>
@@ -159,8 +156,7 @@
                     </div>
                 </div>
 
-                
-                <div class="at-card" style="margin-bottom:16px;">
+                <div class="at-card fade-in delay-4" style="margin-bottom:16px;">
                     <div class="at-card-header">
                         <h2 class="at-card-title">Status e Controle</h2>
                     </div>
@@ -199,8 +195,7 @@
                     </div>
                 </div>
 
-                
-                <div class="at-card" style="margin-bottom:16px;">
+                <div class="at-card fade-in delay-5" style="margin-bottom:16px;">
                     <div class="at-card-header">
                         <h2 class="at-card-title">Complementares</h2>
                     </div>
@@ -219,7 +214,7 @@
                     </div>
                 </div>
 
-                <div style="display:flex; gap:10px; margin-bottom:24px;">
+                <div class="at-form-actions">
                     <button type="submit" class="btn btn-primary btn-lg">
                         <i class="bi bi-check-lg"></i> Salvar Alterações
                     </button>

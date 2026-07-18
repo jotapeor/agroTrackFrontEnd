@@ -4,14 +4,23 @@
     <meta charset="UTF-8">
     <th:block th:fragment="head-content">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="icon" type="image/png" th:href="@{/icon.png}">
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
         <link th:href="@{/css/agrotrack.css}" rel="stylesheet">
         <style>
-            .at-nav-sublist { list-style:none; padding:0; margin:0; max-height:0; overflow:hidden; transition:max-height 0.25s ease; }
+            body { font-family: 'Inter', sans-serif !important; }
+            .at-sidebar { background: linear-gradient(180deg, #1f2937 0%, #111827 100%); border-right: 1px solid rgba(255,255,255,0.05); }
+            .at-nav-sublist { list-style:none; padding:0; margin:0; max-height:0; overflow:hidden; transition:max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
             .at-nav-sublist.open { max-height:300px; }
-            .at-nav-sublist .at-nav-link { padding-left:42px; font-size:.8rem; white-space:nowrap; }
+            .at-nav-sublist .at-nav-link { padding-left:42px; font-size:.85rem; white-space:nowrap; opacity: 0.8; transition: opacity 0.2s, background 0.2s; }
+            .at-nav-sublist .at-nav-link:hover { opacity: 1; }
             .at-nav-toggle { cursor:pointer; }
-            .at-nav-toggle .toggle-icon { transition:transform .2s; margin-left:auto; }
+            .at-nav-toggle .toggle-icon { transition:transform .3s ease; margin-left:auto; }
             .at-nav-toggle.open .toggle-icon { transform:rotate(90deg); }
 
             .at-sidebar:not(:hover) .at-nav-link.active,
@@ -50,8 +59,8 @@
             <li class="at-nav-item">
                 <a th:href="@{/maquinas}" class="at-nav-link" id="nav-maquinas"><i class="bi bi-truck"></i><span>Máquinas</span></a>
             </li>
-            <li class="at-nav-item">
-                <a href="#" class="at-nav-link" id="nav-operacoes"><i class="bi bi-activity"></i><span>Operações</span></a>
+            <li th:if="${session.role == 'PROPRIETARIO' || session.role == 'SOCIO'}" class="at-nav-item">
+                <a th:href="@{/operacoes}" class="at-nav-link" id="nav-operacoes"><i class="bi bi-activity"></i><span>Operações</span></a>
             </li>
             <li class="at-nav-item">
                 <a th:href="@{/abastecimentos}" class="at-nav-link" id="nav-abastecimento"><i class="bi bi-fuel-pump"></i><span>Abastecimentos</span></a>
@@ -86,6 +95,11 @@
             <li th:if="${session.role == 'PROPRIETARIO' || session.role == 'SOCIO'}" class="at-nav-item">
                 <a th:href="@{/colaboradores}" class="at-nav-link" id="nav-colaboradores">
                     <i class="bi bi-people"></i><span>Colaboradores</span>
+                </a>
+            </li>
+            <li th:if="${session.role == 'PROPRIETARIO' || session.role == 'SOCIO'}" class="at-nav-item">
+                <a th:href="@{/relatorios}" class="at-nav-link" id="nav-relatorios">
+                    <i class="bi bi-graph-up"></i><span>Relatórios</span>
                 </a>
             </li>
             <li th:if="${session.role == 'PROPRIETARIO' || session.role == 'SOCIO'}"><p class="at-nav-label">Conta</p></li>

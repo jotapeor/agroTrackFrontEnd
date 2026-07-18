@@ -220,7 +220,7 @@ function toggleSubmitBtn() {
 }
 
 function initFooterScroll() {
-    // Obsolete: Footer is now natively pushed to the bottom by flexbox without hiding
+
 }
 
 function initPrimeiroAcesso() {
@@ -302,9 +302,9 @@ function initPrimeiroAcesso() {
             body: JSON.stringify({ senha: novaSenha.value })
         })
         .then(r => { if (!r.ok) return r.text().then(t => { throw new Error(t); }); return r.text(); })
-        .then(() => { 
-            overlay.remove(); 
-            document.body.style.overflow = ''; 
+        .then(() => {
+            overlay.remove();
+            document.body.style.overflow = '';
             if (typeof showToast === 'function') showToast('Senha alterada com sucesso!', 'success');
         })
         .catch(err => { ge.textContent = err.message; ge.style.display = 'block'; btnAlterar.disabled = false; btnAlterar.innerHTML = '<i class=\"bi bi-check-lg\"></i> Alterar Senha'; });

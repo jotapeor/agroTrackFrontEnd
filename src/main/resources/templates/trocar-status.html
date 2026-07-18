@@ -24,7 +24,7 @@
     <div class="at-main">
         <div th:replace="~{fragments/layout :: topbar('Operação')}"></div>
         <main class="at-content" id="main-content">
-            <div class="at-page-header">
+            <div class="at-page-header fade-in">
                 <h1 class="at-page-title" th:text="'Operação: ' + ${maquina.nome}">Operação da Máquina</h1>
                 <p class="at-page-subtitle" th:text="${maquina.marca} + ' ' + ${maquina.modelo} + ' — Status Atual: ' + ${maquina.status}">Detalhes</p>
             </div>
@@ -32,12 +32,38 @@
             <div th:if="${errorMessage}" class="at-alert at-alert-danger" role="alert">
                 <i class="bi bi-exclamation-circle"></i> <span th:text="${errorMessage}">Erro.</span>
             </div>
-            
+
             <div th:if="${mensagemSucesso}" class="at-alert at-alert-success" role="alert">
                 <i class="bi bi-check-circle"></i> <span th:text="${mensagemSucesso}">Sucesso.</span>
             </div>
 
-            <div th:if="${maquina.nivelRisco == 'Alto'}" class="at-card" style="margin-bottom: 16px;">
+            <div th:if="${resumoOperacao}" class="at-card fade-in delay-1" style="margin-bottom: 16px; border-color: var(--at-primary);">
+                <div class="at-card-header" style="background-color: var(--at-primary-light);">
+                    <h2 class="at-card-title"><i class="bi bi-clipboard-check"></i> Resumo do Encerramento</h2>
+                </div>
+                <div class="at-card-body">
+                    <p><strong>Operador:</strong> <span th:text="${resumoOperacao.nomeOperador}"></span></p>
+                    <p><strong>Início:</strong> <span th:text="${#strings.substring(resumoOperacao.dataInicio, 0, 16).replace('T', ' ')}"></span></p>
+                    <p><strong>Fim:</strong> <span th:text="${#strings.substring(resumoOperacao.dataFim, 0, 16).replace('T', ' ')}"></span></p>
+                    <p><strong>Horas Operadas:</strong> <span th:text="${resumoOperacao.horasOperadas} + ' h'"></span></p>
+                    <p><strong>Km Rodados:</strong> <span th:text="${resumoOperacao.kmRodados}"></span></p>
+                    <p><strong>Peso Carregado:</strong> <span th:text="${resumoOperacao.pesoCarregado != null ? resumoOperacao.pesoCarregado : 'N/A'}"></span></p>
+                    <p><strong>Observações:</strong> <span th:text="${resumoOperacao.observacoes}"></span></p>
+                    <hr style="margin: 12px 0; border: none; border-top: 1px solid var(--at-border);">
+                    <p><strong>Consumo Estimado na Operação:</strong> <span th:text="${resumoOperacao.consumoEstimadoOperacao != null ? resumoOperacao.consumoEstimadoOperacao + ' L/km (ou un)' : 'Sem dados suficientes'}"></span></p>
+
+                    <div th:if="${resumoOperacao.alertasGerados != null and !#lists.isEmpty(resumoOperacao.alertasGerados)}" style="margin-top: 16px;">
+                        <h4 style="margin-bottom: 8px; color: var(--at-danger);"><i class="bi bi-exclamation-triangle"></i> Alertas Gerados Durante a Operação</h4>
+                        <ul style="list-style: none; padding-left: 0;">
+                            <li th:each="alerta : ${resumoOperacao.alertasGerados}" style="background: #fff3cd; color: #856404; padding: 8px; border-radius: 4px; margin-bottom: 4px; border: 1px solid #ffeeba;">
+                                <strong th:text="${alerta.tipo}"></strong>: <span th:text="${alerta.mensagem}"></span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${maquina.nivelRisco == 'Alto'}" class="at-card fade-in delay-1" style="margin-bottom: 16px;">
                 <div class="at-card-header">
                     <h2 class="at-card-title" style="color: var(--at-danger);"><i class="bi bi-exclamation-triangle"></i> Risco Alto Detectado</h2>
                 </div>
@@ -67,7 +93,7 @@
                 </div>
             </div>
 
-            <div class="at-grid at-grid-2">
+            <div class="at-grid at-grid-2 fade-in delay-2">
                 <div class="at-card">
                     <div class="at-card-header">
                         <h2 class="at-card-title">Atualizar Status</h2>
@@ -84,7 +110,7 @@
                                     <option value="Inativa" th:disabled="${maquina.status == 'Inativa'}">Inativa</option>
                                 </select>
                             </div>
-                            
+
                             <div id="campos-iniciar-operacao" style="display: none; padding: 12px; background: #f8fafc; border-radius: 6px; margin-bottom: 16px; border: 1px solid #e2e8f0;">
                                 <div class="at-form-group" style="margin-bottom: 8px;">
                                     <label class="at-form-label">
@@ -96,7 +122,7 @@
                                     <input type="number" step="0.1" id="pesoCarregado" name="pesoCarregado" class="at-form-control" placeholder="Ex: 500.5">
                                 </div>
                             </div>
-                            
+
                             <div id="campos-encerrar-operacao" style="display: none; padding: 12px; background: #f8fafc; border-radius: 6px; margin-bottom: 16px; border: 1px solid #e2e8f0;">
                                 <p style="font-size: 0.85rem; color: var(--at-text-secondary); margin-bottom: 12px;">Preencha os dados de encerramento da operação.</p>
                                 <div class="at-form-group">
@@ -125,28 +151,63 @@
                         </div>
                         <div class="history-list" th:if="${!#lists.isEmpty(historico)}" style="margin: 0; border: none; border-radius: 0;">
                             <div class="history-item" th:each="r : ${historico}">
-                                <div class="history-date">
-                                    <span th:text="${r.dataInicio.replace('T', ' ').substring(0, 16)}">Data Inicio</span>
-                                    <span th:if="${r.dataFim}"> até <span th:text="${r.dataFim.replace('T', ' ').substring(0, 16)}">Data Fim</span></span>
-                                    <span th:unless="${r.dataFim}" class="at-badge at-badge-info" style="font-size: 0.65rem; padding: 2px 6px;">Em Andamento</span>
-                                </div>
-                                <div class="history-body">
-                                    <div class="history-info">
-                                        Operador: <strong th:text="${r.nomeOperador}">Nome</strong>
-                                        <div style="font-size: 0.8rem; margin-top: 4px;" th:if="${r.observacoes}" th:text="${r.observacoes}">Obs</div>
+
+                                <th:block th:if="${r.tipo == 'Operacao'}">
+                                    <div class="history-date">
+                                        <span th:text="${r.dataInicio.replace('T', ' ').substring(0, 16)}">Data Inicio</span>
+                                        <span th:if="${r.dataFim}"> até <span th:text="${r.dataFim.replace('T', ' ').substring(0, 16)}">Data Fim</span></span>
+                                        <span th:unless="${r.dataFim}" class="at-badge at-badge-info" style="font-size: 0.65rem; padding: 2px 6px;">Em Andamento</span>
+                                        <span class="at-badge at-badge-neutral" style="font-size: 0.65rem; padding: 2px 6px; margin-left:4px;">Operação</span>
                                     </div>
-                                    <div class="history-stats" th:if="${r.dataFim}">
-                                        <div th:if="${r.horasOperadas}"><strong th:text="${r.horasOperadas} + 'h'">1.5h</strong></div>
-                                        <div th:if="${r.kmRodados}"><span th:text="${r.kmRodados} + ' un rodadas'">10</span></div>
-                                        <div th:if="${r.pesoCarregado}"><span th:text="${r.pesoCarregado} + ' kg/L'">100</span></div>
+                                    <div class="history-body">
+                                        <div class="history-info">
+                                            Operador: <strong th:text="${r.nomeOperador}">Nome</strong>
+                                            <div style="font-size: 0.8rem; margin-top: 4px;" th:if="${r.observacoes}" th:text="${r.observacoes}">Obs</div>
+                                        </div>
+                                        <div class="history-stats" th:if="${r.dataFim}">
+                                            <div th:if="${r.horasOperadas}"><strong th:text="${r.horasOperadas} + 'h'">1.5h</strong></div>
+                                            <div th:if="${r.kmRodados}"><span th:text="${r.kmRodados} + ' un rodadas'">10</span></div>
+                                            <div th:if="${r.pesoCarregado}"><span th:text="${r.pesoCarregado} + ' kg/L'">100</span></div>
+                                        </div>
                                     </div>
-                                </div>
+                                </th:block>
+
+                                <th:block th:if="${r.tipo == 'Abastecimento'}">
+                                    <div class="history-date">
+                                        <span th:text="${r.dataAbastecimento.replace('T', ' ').substring(0, 16)}">Data</span>
+                                        <span class="at-badge at-badge-success" style="font-size: 0.65rem; padding: 2px 6px; margin-left:4px;">Abastecimento</span>
+                                    </div>
+                                    <div class="history-body">
+                                        <div class="history-info">
+                                            Operador: <strong th:text="${r.nomeOperador}">Nome</strong>
+                                            <div style="font-size: 0.8rem; margin-top: 4px;">Combustível: <span th:text="${r.tipoCombustivel}">Tipo</span></div>
+                                        </div>
+                                        <div class="history-stats">
+                                            <div><strong><span th:text="${r.litros} + ' L'">10 L</span></strong></div>
+                                            <div><span th:text="'Hodômetro: ' + ${r.hodometroAtual} + 'h'"></span></div>
+                                        </div>
+                                    </div>
+                                </th:block>
+
+                                <th:block th:if="${r.tipo == 'AutorizacaoRisco'}">
+                                    <div class="history-date">
+                                        <span th:text="${r.dataAutorizacao.replace('T', ' ').substring(0, 16)}">Data</span>
+                                        <span class="at-badge at-badge-warning" style="font-size: 0.65rem; padding: 2px 6px; margin-left:4px;">Autorização de Risco</span>
+                                    </div>
+                                    <div class="history-body">
+                                        <div class="history-info">
+                                            Autorizado por: <strong th:text="${r.nomeAutorizador}">Nome</strong>
+                                            <div style="font-size: 0.8rem; margin-top: 4px;" th:text="${r.justificativa}">Justificativa</div>
+                                        </div>
+                                    </div>
+                                </th:block>
+
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <div style="margin-top: 16px;">
                 <a th:href="@{/maquinas}" class="btn btn-outline">Voltar</a>
             </div>
@@ -159,10 +220,10 @@
     function toggleCampos(novoStatus, statusAtual, tipoMaquina) {
         var iniciar = document.getElementById('campos-iniciar-operacao');
         var encerrar = document.getElementById('campos-encerrar-operacao');
-        
+
         iniciar.style.display = 'none';
         encerrar.style.display = 'none';
-        
+
         if (novoStatus === 'Em Operacao') {
             iniciar.style.display = 'block';
         } else if (statusAtual === 'Em Operacao' && novoStatus !== '') {

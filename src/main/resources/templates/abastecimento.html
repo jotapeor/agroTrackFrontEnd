@@ -14,7 +14,7 @@
     <div class="at-main">
         <div th:replace="~{fragments/layout :: topbar('Abastecimentos')}"></div>
         <main class="at-content" id="main-content">
-            <div class="at-page-header">
+            <div class="at-page-header fade-in">
                 <h1 class="at-page-title">Registrar Abastecimento</h1>
                 <p class="at-page-subtitle">Lance o abastecimento de combustível para manter o controle de consumo e gastos da frota.</p>
             </div>
@@ -26,7 +26,7 @@
                 <i class="bi bi-check-circle"></i> <span th:text="${mensagemSucesso}">Sucesso.</span>
             </div>
 
-            <div class="at-card" style="max-width: 800px; margin: 0 auto;">
+            <div class="at-card fade-in delay-1" style="max-width: 800px; margin: 0 auto;">
                 <div class="at-card-header">
                     <h2 class="at-card-title">Dados do Abastecimento</h2>
                 </div>
@@ -39,7 +39,7 @@
                                 <option th:each="m : ${maquinas}" th:value="${m.id}" th:text="${m.nome} + ' (' + ${m.marca} + ' ' + ${m.modelo} + ')'"></option>
                             </select>
                         </div>
-                        
+
                         <div class="at-grid at-grid-2">
                             <div class="at-form-group">
                                 <label class="at-form-label" for="dataAbastecimento">Data e Hora</label>
@@ -69,8 +69,8 @@
                             </div>
                         </div>
 
-                        <div style="margin-top: 24px;">
-                            <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">Registrar Abastecimento</button>
+                        <div class="at-form-actions">
+                            <button type="submit" class="btn btn-primary btn-lg btn-block">Registrar Abastecimento</button>
                         </div>
                     </form>
                 </div>

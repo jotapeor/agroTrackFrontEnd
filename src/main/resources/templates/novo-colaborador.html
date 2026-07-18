@@ -14,7 +14,7 @@
     <div class="at-main">
         <div th:replace="~{fragments/layout :: topbar('Cadastrar Colaborador')}"></div>
         <main class="at-content" id="main-content">
-            <div class="at-page-header">
+            <div class="at-page-header fade-in">
                 <h1 class="at-page-title">Cadastrar Novo Colaborador</h1>
                 <p class="at-page-subtitle">
                     Preencha os dados para criar um novo acesso ao sistema.
@@ -37,7 +37,7 @@
                 </div>
             </div>
             <div style="max-width: 640px;">
-                <div class="at-card">
+                <div class="at-card fade-in delay-1">
                     <div class="at-card-header">
                         <h2 class="at-card-title">Dados do Colaborador</h2>
                         <span class="at-badge at-badge-warning" style="font-size:.7rem;">Proprietário</span>
@@ -80,7 +80,7 @@
                                 <span class="at-form-error" id="email-error" style="display:none;"></span>
                                 <span class="at-form-success" id="email-success" style="display:none;"></span>
                             </div>
-                            <div class="at-grid at-grid-2" style="margin-bottom:0;">
+                            <div class="at-grid at-grid-2">
                                 <div class="at-form-group">
                                     <label class="at-form-label" for="senha">
                                         Senha <span class="required">*</span>
@@ -125,7 +125,7 @@
                                     <span class="at-form-success" id="confirmar-success" style="display:none;"></span>
                                 </div>
                             </div>
-                            <div class="at-grid at-grid-2" style="margin-bottom:0;">
+                            <div class="at-grid at-grid-2">
                                 <div class="at-form-group">
                                     <label class="at-form-label" for="perfil">
                                         Perfil de acesso <span class="required">*</span>
@@ -155,12 +155,12 @@
                                     O colaborador acessa o sistema com e-mail e senha. A senha pode ser alterada após o primeiro login.
                                 </span>
                             </div>
-                            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                                <button type="submit" class="btn btn-primary" id="btn-cadastrar">
+                            <div class="at-form-actions">
+                                <button type="submit" class="btn btn-primary btn-lg" id="btn-cadastrar">
                                     <i class="bi bi-person-check"></i>
                                     Cadastrar
                                 </button>
-                                <a th:href="@{/colaboradores}" class="btn btn-ghost" id="btn-cancelar">
+                                <a th:href="@{/colaboradores}" class="btn btn-ghost btn-lg" id="btn-cancelar">
                                     Cancelar
                                 </a>
                             </div>

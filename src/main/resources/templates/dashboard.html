@@ -14,19 +14,19 @@
     <div class="at-main">
         <div th:replace="~{fragments/layout :: topbar('Dashboard')}"></div>
         <main class="at-content" id="main-content">
-            <div class="at-page-header">
+            <div class="at-page-header fade-in">
                 <h1 class="at-page-title">Dashboard</h1>
                 <p class="at-page-subtitle">
                     Bem-vindo, <strong th:text="${nomeUsuario}">Usuário</strong>.
                 </p>
                 <input type="hidden" id="primeiroAcessoFlag" th:value="${primeiroAcesso}" value="false" />
             </div>
-            
+
             <div th:if="${errorMessage}" class="at-alert at-alert-danger" role="alert">
                 <i class="bi bi-exclamation-circle"></i> <span th:text="${errorMessage}">Erro.</span>
             </div>
 
-            <div class="at-grid at-grid-4" style="margin-bottom:24px;">
+            <div class="at-grid at-grid-4 fade-in delay-1" style="margin-bottom:24px;">
                 <div class="at-stat-card">
                     <div class="at-stat-icon"><i class="bi bi-truck"></i></div>
                     <div class="at-stat-info">
@@ -60,8 +60,8 @@
                     </div>
                 </div>
             </div>
-            
-            <div class="at-grid" style="grid-template-columns: 1fr 280px; margin-bottom:24px;">
+
+            <div class="at-grid fade-in delay-2" style="grid-template-columns: 1fr 280px; margin-bottom:24px;">
                 <div class="at-card">
                     <div class="at-card-header">
                         <h2 class="at-card-title">Notificações Recentes</h2>
@@ -82,8 +82,8 @@
                             </tr>
                             <tr th:each="n : ${dashboard.notificacoesRecentes}">
                                 <td>
-                                    <span class="at-badge" 
-                                          th:classappend="${n.tipo == 'anomalia' ? 'at-badge-danger' : (n.tipo == 'alerta_preventivo' ? 'at-badge-warning' : 'at-badge-info')}" 
+                                    <span class="at-badge"
+                                          th:classappend="${n.tipo == 'anomalia' ? 'at-badge-danger' : (n.tipo == 'alerta_preventivo' ? 'at-badge-warning' : 'at-badge-info')}"
                                           th:text="${n.tipo}">Tipo</span>
                                 </td>
                                 <td style="max-width:400px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" th:text="${n.mensagem}">
@@ -134,7 +134,7 @@
                     const maqOp = document.querySelector('.at-stat-card:nth-child(2) .at-stat-value');
                     const maqRisco = document.querySelector('.at-stat-card:nth-child(3) .at-stat-value');
                     const alertas = document.querySelector('.at-stat-card:nth-child(4) .at-stat-value');
-                    
+
                     if(maqDisp && data.maquinasPorStatus) maqDisp.textContent = data.maquinasPorStatus['Disponivel'] || 0;
                     if(maqOp && data.maquinasPorStatus) maqOp.textContent = data.maquinasPorStatus['Em Operacao'] || 0;
                     if(maqRisco) maqRisco.textContent = data.maquinasRiscoAlto || 0;
@@ -150,7 +150,7 @@
                                 let badgeClass = n.tipo === 'anomalia' ? 'at-badge-danger' : (n.tipo === 'alerta_preventivo' ? 'at-badge-warning' : 'at-badge-info');
                                 let badgeText = n.tipo;
                                 let lidaBadge = n.lida ? '<span class="at-badge at-badge-success">Lida</span>' : '<span class="at-badge at-badge-neutral">Nova</span>';
-                                
+
                                 tbody.innerHTML += `
                                     <tr>
                                         <td><span class="at-badge ${badgeClass}">${badgeText}</span></td>

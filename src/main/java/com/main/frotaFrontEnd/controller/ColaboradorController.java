@@ -59,7 +59,6 @@ public class ColaboradorController {
         try {
             Map<String, Object> colaborador = apiService.buscarColaborador(id, token);
 
-            // SÓCIO só pode editar OPERADOR
             if ("SOCIO".equals(role) && !"OPERADOR".equals(colaborador.get("perfil"))) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Você só pode editar contas de operador.");
                 return "redirect:/colaboradores";
@@ -100,7 +99,6 @@ public class ColaboradorController {
         String token = (String) session.getAttribute("token");
         String role = (String) session.getAttribute("role");
 
-        // SÓCIO: forçar perfil como OPERADOR (defesa em profundidade)
         if ("SOCIO".equals(role)) {
             perfil = "OPERADOR";
         }
@@ -130,7 +128,6 @@ public class ColaboradorController {
         String token = (String) session.getAttribute("token");
         String role = (String) session.getAttribute("role");
 
-        // SÓCIO: verificar se alvo é OPERADOR
         if ("SOCIO".equals(role)) {
             try {
                 Map<String, Object> colaborador = apiService.buscarColaborador(id, token);
