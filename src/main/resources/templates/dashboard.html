@@ -21,92 +21,78 @@
                 </p>
                 <input type="hidden" id="primeiroAcessoFlag" th:value="${primeiroAcesso}" value="false" />
             </div>
-            <div th:if="${errorMessage}"
-                 class="at-alert at-alert-danger" role="alert">
-                <i class="bi bi-exclamation-circle"></i>
-                <span th:text="${errorMessage}">Erro.</span>
+            
+            <div th:if="${errorMessage}" class="at-alert at-alert-danger" role="alert">
+                <i class="bi bi-exclamation-circle"></i> <span th:text="${errorMessage}">Erro.</span>
             </div>
+
             <div class="at-grid at-grid-4" style="margin-bottom:24px;">
                 <div class="at-stat-card">
                     <div class="at-stat-icon"><i class="bi bi-truck"></i></div>
                     <div class="at-stat-info">
-                        <div class="at-stat-value">3</div>
-                        <div class="at-stat-label">Máquinas Cadastradas</div>
-                        <div class="at-stat-trend success">+1 este mês</div>
+                        <div class="at-stat-value" th:text="${dashboard.maquinasPorStatus['Disponivel'] ?: 0}">0</div>
+                        <div class="at-stat-label">Máquinas Disponíveis</div>
+                        <div class="at-stat-trend success">Prontas para uso</div>
                     </div>
                 </div>
                 <div class="at-stat-card">
-                    <div class="at-stat-icon"><i class="bi bi-wrench-adjustable"></i></div>
+                    <div class="at-stat-icon"><i class="bi bi-play-circle"></i></div>
                     <div class="at-stat-info">
-                        <div class="at-stat-value">1</div>
-                        <div class="at-stat-label">Manutenção Ativa</div>
-                        <div class="at-stat-trend warning">Atenção necessária</div>
+                        <div class="at-stat-value" th:text="${dashboard.maquinasPorStatus['Em Operacao'] ?: 0}">0</div>
+                        <div class="at-stat-label">Em Operação</div>
+                        <div class="at-stat-trend info">Trabalhando</div>
+                    </div>
+                </div>
+                <div class="at-stat-card">
+                    <div class="at-stat-icon" style="color:var(--at-warning);"><i class="bi bi-exclamation-triangle"></i></div>
+                    <div class="at-stat-info">
+                        <div class="at-stat-value" th:text="${dashboard.maquinasRiscoAlto ?: 0}">0</div>
+                        <div class="at-stat-label">Máquinas em Risco Alto</div>
+                        <div class="at-stat-trend warning">Requerem atenção</div>
                     </div>
                 </div>
                 <div class="at-stat-card">
                     <div class="at-stat-icon"><i class="bi bi-bell"></i></div>
                     <div class="at-stat-info">
-                        <div class="at-stat-value">3</div>
-                        <div class="at-stat-label">Notificações Pendentes</div>
-                        <div class="at-stat-trend warning">2 não lidas</div>
-                    </div>
-                </div>
-                <div class="at-stat-card">
-                    <div class="at-stat-icon"><i class="bi bi-fuel-pump"></i></div>
-                    <div class="at-stat-info">
-                        <div class="at-stat-value">3</div>
-                        <div class="at-stat-label">Abastecimentos (mês)</div>
-                        <div class="at-stat-trend success">750L registrados</div>
+                        <div class="at-stat-value" th:text="${dashboard.alertasAtivos ?: 0}">0</div>
+                        <div class="at-stat-label">Alertas Ativos</div>
+                        <div class="at-stat-trend danger">Avisos e Anomalias</div>
                     </div>
                 </div>
             </div>
+            
             <div class="at-grid" style="grid-template-columns: 1fr 280px; margin-bottom:24px;">
                 <div class="at-card">
                     <div class="at-card-header">
-                        <h2 class="at-card-title">Status das Máquinas</h2>
-                        <a href="#" class="btn btn-ghost btn-sm" id="btn-ver-maquinas">Ver todas</a>
+                        <h2 class="at-card-title">Notificações Recentes</h2>
+                        <a th:href="@{/notificacoes}" class="btn btn-ghost btn-sm">Ver todas</a>
                     </div>
                     <div class="at-card-body" style="padding:0;">
-                        <table class="at-table" id="tabela-maquinas">
+                        <table class="at-table" id="tabela-notificacoes">
                             <thead>
                             <tr>
-                                <th>Máquina</th>
                                 <th>Tipo</th>
-                                <th>Hodômetro</th>
+                                <th>Mensagem</th>
                                 <th>Status</th>
-                                <th>Risco</th>
                             </tr>
                             </thead>
                             <tbody>
-                            <tr>
-                                <td>
-                                    <strong>Trator John Deere 6100J</strong>
-                                    <div class="text-muted" style="font-size:.75rem;">Ano 2021</div>
-                                </td>
-                                <td>Trator</td>
-                                <td>1.250,5 km</td>
-                                <td><span class="at-badge at-badge-success">Disponível</span></td>
-                                <td><span class="at-badge at-badge-success">Baixo</span></td>
+                            <tr th:if="${#lists.isEmpty(dashboard.notificacoesRecentes)}">
+                                <td colspan="3" style="text-align: center; color: var(--at-text-muted); padding: 24px;">Nenhuma notificação encontrada.</td>
                             </tr>
-                            <tr>
+                            <tr th:each="n : ${dashboard.notificacoesRecentes}">
                                 <td>
-                                    <strong>Colheitadeira Case IH 250</strong>
-                                    <div class="text-muted" style="font-size:.75rem;">Ano 2023</div>
+                                    <span class="at-badge" 
+                                          th:classappend="${n.tipo == 'anomalia' ? 'at-badge-danger' : (n.tipo == 'alerta_preventivo' ? 'at-badge-warning' : 'at-badge-info')}" 
+                                          th:text="${n.tipo}">Tipo</span>
                                 </td>
-                                <td>Colheitadeira</td>
-                                <td>450,0 km</td>
-                                <td><span class="at-badge at-badge-info">Em Operação</span></td>
-                                <td><span class="at-badge at-badge-warning">Médio</span></td>
-                            </tr>
-                            <tr>
+                                <td style="max-width:400px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" th:text="${n.mensagem}">
+                                    Mensagem
+                                </td>
                                 <td>
-                                    <strong>Pulverizador Jacto 3030</strong>
-                                    <div class="text-muted" style="font-size:.75rem;">Ano 2020</div>
+                                    <span th:if="${n.lida}" class="at-badge at-badge-success">Lida</span>
+                                    <span th:unless="${n.lida}" class="at-badge at-badge-neutral">Nova</span>
                                 </td>
-                                <td>Pulverizador</td>
-                                <td>3.200,8 km</td>
-                                <td><span class="at-badge at-badge-danger">Em Manutenção</span></td>
-                                <td><span class="at-badge at-badge-danger">Alto</span></td>
                             </tr>
                             </tbody>
                         </table>
@@ -114,83 +100,23 @@
                 </div>
                 <div class="at-card">
                     <div class="at-card-header">
-                        <h2 class="at-card-title">Ações</h2>
+                        <h2 class="at-card-title">Ações Rápidas</h2>
                     </div>
                     <div class="at-card-body" style="display:flex; flex-direction:column; gap:8px;">
-                        <a href="#" class="btn btn-outline btn-block" id="btn-nova-operacao" style="justify-content:flex-start;">
-                            <i class="bi bi-play-circle"></i>
-                            Registrar Operação
+                        <a th:href="@{/maquinas}" class="btn btn-outline btn-block" style="justify-content:flex-start;">
+                            <i class="bi bi-truck"></i> Ver Frota
                         </a>
-                        <a href="#" class="btn btn-outline btn-block" id="btn-novo-abastecimento" style="justify-content:flex-start;">
-                            <i class="bi bi-fuel-pump"></i>
-                            Registrar Abastecimento
-                        </a>
-                        <a href="#" class="btn btn-outline btn-block" id="btn-nova-manutencao" style="justify-content:flex-start;">
-                            <i class="bi bi-wrench-adjustable"></i>
-                            Abrir Manutenção
+                        <a th:href="@{/ordens/nova}" class="btn btn-outline btn-block" style="justify-content:flex-start;">
+                            <i class="bi bi-wrench-adjustable"></i> Abrir Manutenção
                         </a>
                         <hr style="border:none; border-top:1px solid var(--at-border); margin:8px 0;" th:if="${perfil == 'PROPRIETARIO'}">
-                        <a th:if="${perfil == 'PROPRIETARIO'}"
-                           th:href="@{/nova-maquina}"
-                           class="btn btn-primary btn-block"
-                           id="btn-nova-maquina"
-                           style="justify-content:flex-start;">
-                            <i class="bi bi-truck"></i>
-                            Cadastrar Máquina
+                        <a th:if="${perfil == 'PROPRIETARIO'}" th:href="@{/nova-maquina}" class="btn btn-primary btn-block" style="justify-content:flex-start;">
+                            <i class="bi bi-plus-circle"></i> Cadastrar Máquina
                         </a>
-                        <a th:if="${perfil == 'PROPRIETARIO'}"
-                           th:href="@{/novo-colaborador}"
-                           class="btn btn-primary btn-block"
-                           id="btn-novo-colaborador"
-                           style="justify-content:flex-start;">
-                            <i class="bi bi-person-plus"></i>
-                            Cadastrar Colaborador
+                        <a th:if="${perfil == 'PROPRIETARIO'}" th:href="@{/novo-colaborador}" class="btn btn-primary btn-block" style="justify-content:flex-start;">
+                            <i class="bi bi-person-plus"></i> Cadastrar Colaborador
                         </a>
                     </div>
-                </div>
-            </div>
-            <div class="at-card">
-                <div class="at-card-header">
-                    <h2 class="at-card-title">Notificações Recentes</h2>
-                    <span class="at-badge at-badge-danger">3 pendentes</span>
-                </div>
-                <div class="at-card-body" style="padding:0;">
-                    <table class="at-table" id="tabela-notificacoes">
-                        <thead>
-                        <tr>
-                            <th>Tipo</th>
-                            <th>Mensagem</th>
-                            <th>Data</th>
-                            <th>Status</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td><span class="at-badge at-badge-warning">Preventivo</span></td>
-                            <td style="max-width:400px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                Trator John Deere próximo do limite de quilometragem para revisão.
-                            </td>
-                            <td style="white-space:nowrap; font-size:.8rem;" class="text-muted">23/06/2026</td>
-                            <td><span class="at-badge at-badge-neutral">Não lida</span></td>
-                        </tr>
-                        <tr>
-                            <td><span class="at-badge at-badge-info">Aprovação</span></td>
-                            <td style="max-width:400px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                Ordem de Manutenção pendente de aprovação para a Colheitadeira.
-                            </td>
-                            <td style="white-space:nowrap; font-size:.8rem;" class="text-muted">23/06/2026</td>
-                            <td><span class="at-badge at-badge-neutral">Não lida</span></td>
-                        </tr>
-                        <tr>
-                            <td><span class="at-badge at-badge-danger">Anomalia</span></td>
-                            <td style="max-width:400px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                Falha crítica no Pulverizador Jacto. Máquina em manutenção.
-                            </td>
-                            <td style="white-space:nowrap; font-size:.8rem;" class="text-muted">23/06/2026</td>
-                            <td><span class="at-badge at-badge-success">Lida</span></td>
-                        </tr>
-                        </tbody>
-                    </table>
                 </div>
             </div>
         </main>
@@ -198,5 +124,47 @@
     </div>
 </div>
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        setInterval(function() {
+            fetch('/api/dashboard/data')
+                .then(r => { if(r.ok) return r.json(); throw new Error('Erro na requisição'); })
+                .then(data => {
+                    const maqDisp = document.querySelector('.at-stat-card:nth-child(1) .at-stat-value');
+                    const maqOp = document.querySelector('.at-stat-card:nth-child(2) .at-stat-value');
+                    const maqRisco = document.querySelector('.at-stat-card:nth-child(3) .at-stat-value');
+                    const alertas = document.querySelector('.at-stat-card:nth-child(4) .at-stat-value');
+                    
+                    if(maqDisp && data.maquinasPorStatus) maqDisp.textContent = data.maquinasPorStatus['Disponivel'] || 0;
+                    if(maqOp && data.maquinasPorStatus) maqOp.textContent = data.maquinasPorStatus['Em Operacao'] || 0;
+                    if(maqRisco) maqRisco.textContent = data.maquinasRiscoAlto || 0;
+                    if(alertas) alertas.textContent = data.alertasAtivos || 0;
+
+                    const tbody = document.querySelector('#tabela-notificacoes tbody');
+                    if (tbody && data.notificacoesRecentes) {
+                        if (data.notificacoesRecentes.length === 0) {
+                            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--at-text-muted); padding: 24px;">Nenhuma notificação encontrada.</td></tr>';
+                        } else {
+                            tbody.innerHTML = '';
+                            data.notificacoesRecentes.forEach(n => {
+                                let badgeClass = n.tipo === 'anomalia' ? 'at-badge-danger' : (n.tipo === 'alerta_preventivo' ? 'at-badge-warning' : 'at-badge-info');
+                                let badgeText = n.tipo;
+                                let lidaBadge = n.lida ? '<span class="at-badge at-badge-success">Lida</span>' : '<span class="at-badge at-badge-neutral">Nova</span>';
+                                
+                                tbody.innerHTML += `
+                                    <tr>
+                                        <td><span class="at-badge ${badgeClass}">${badgeText}</span></td>
+                                        <td style="max-width:400px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.mensagem}</td>
+                                        <td>${lidaBadge}</td>
+                                    </tr>
+                                `;
+                            });
+                        }
+                    }
+                })
+                .catch(e => console.error("Erro no polling da dashboard:", e));
+        }, 5000);
+    });
+</script>
 </body>
 </html>

@@ -27,11 +27,37 @@ public class AuthController {
 
     @GetMapping("/dashboard")
     public String dashboard(HttpSession session, Model model) {
-        if (session.getAttribute("token") == null) return "redirect:/login";
+        String token = (String) session.getAttribute("token");
+        if (token == null) return "redirect:/login";
         model.addAttribute("perfil", session.getAttribute("role"));
         model.addAttribute("nomeUsuario", session.getAttribute("nome"));
         model.addAttribute("primeiroAcesso", session.getAttribute("primeiroAcesso"));
+
+        try {
+            Map<String, Object> dadosDashboard = restService.obterDashboard(token);
+            model.addAttribute("dashboard", dadosDashboard);
+        } catch (Exception e) {
+            model.addAttribute("dashboard", Map.of(
+                "maquinasPorStatus", Map.of(),
+                "alertasAtivos", 0,
+                "maquinasRiscoAlto", 0,
+                "notificacoesRecentes", java.util.List.of()
+            ));
+        }
+
         return "dashboard";
+    }
+
+    @GetMapping("/api/dashboard/data")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> dashboardData(HttpSession session) {
+        String token = (String) session.getAttribute("token");
+        if (token == null) return ResponseEntity.status(401).build();
+        try {
+            return ResponseEntity.ok(restService.obterDashboard(token));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
     }
 
     @GetMapping("/login")

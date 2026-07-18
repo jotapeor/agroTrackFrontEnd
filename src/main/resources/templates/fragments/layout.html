@@ -54,15 +54,15 @@
                 <a href="#" class="at-nav-link" id="nav-operacoes"><i class="bi bi-activity"></i><span>Operações</span></a>
             </li>
             <li class="at-nav-item">
-                <a href="#" class="at-nav-link" id="nav-abastecimento"><i class="bi bi-fuel-pump"></i><span>Abastecimentos</span></a>
+                <a th:href="@{/abastecimentos}" class="at-nav-link" id="nav-abastecimento"><i class="bi bi-fuel-pump"></i><span>Abastecimentos</span></a>
             </li>
             <li><p class="at-nav-label">Manutenção</p></li>
             <li class="at-nav-item">
-                <a href="#" class="at-nav-link" id="nav-ordens"><i class="bi bi-wrench-adjustable"></i><span>Ordens de Manutenção</span></a>
+                <a th:href="@{/ordens}" class="at-nav-link" id="nav-ordens"><i class="bi bi-wrench-adjustable"></i><span>Ordens de Manutenção</span></a>
             </li>
             <li class="at-nav-item">
-                <a href="#" class="at-nav-link" id="nav-notificacoes">
-                    <i class="bi bi-bell"></i><span>Notificações</span><span class="at-nav-badge">3</span>
+                <a th:href="@{/notificacoes}" class="at-nav-link" id="nav-notificacoes">
+                    <i class="bi bi-bell"></i><span>Notificações</span>
                 </a>
             </li>
             <li th:if="${session.role == 'PROPRIETARIO'}"><p class="at-nav-label">Administração</p></li>
@@ -118,7 +118,7 @@
 </footer>
 <th:block th:fragment="scripts">
     <input type="hidden" id="toast-success-message" th:if="${mensagemSucesso != null}" th:value="${mensagemSucesso}" />
-    <input type="hidden" id="toast-error-message" th:if="${mensagemErro != null}" th:value="${mensagemErro}" />
+    <input type="hidden" id="toast-error-message" th:if="${errorMessage != null}" th:value="${errorMessage}" />
     <script th:src="@{/script.js}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {

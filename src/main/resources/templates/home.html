@@ -9,220 +9,333 @@
     <th:block th:replace="~{fragments/layout :: head-content}"></th:block>
     <style>
         /* Reset adicional para a home */
-        .home-page {
-            min-height: 100vh;
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            background-color: #0a1710;
+            color: #fff;
+            overflow-x: hidden;
+        }
+        
+        .navbar-home {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            padding: 20px 40px;
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            background: rgba(10, 23, 16, 0.85);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .navbar-logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #fff;
+            text-decoration: none;
+            letter-spacing: -1px;
+        }
+        .navbar-logo span { color: #4ade80; }
+        .nav-links {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+        .nav-link {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: color 0.3s;
+        }
+        .nav-link:hover { color: #4ade80; }
+        .nav-btn {
+            padding: 10px 24px;
+            background: #16a34a;
+            color: #fff;
+            border-radius: 4px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.3s, transform 0.2s;
+        }
+        .nav-btn:hover {
+            background: #15803d;
+            transform: translateY(-2px);
+            color: #fff;
         }
 
         /* Hero Section */
         .hero {
-            flex: 1;
+            min-height: 100vh;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 60px 24px 40px;
-            background: linear-gradient(135deg, #0f1f17 0%, #1a3a2a 50%, #0f1f17 100%);
+            padding: 120px 24px 80px;
             position: relative;
-            overflow: hidden;
+            background: url('/background.png') no-repeat center center;
+            background-size: cover;
+            background-attachment: fixed;
         }
-
         .hero::before {
             content: '';
             position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle at 30% 50%, rgba(22, 163, 74, .06) 0%, transparent 50%),
-                        radial-gradient(circle at 70% 50%, rgba(74, 222, 128, .04) 0%, transparent 50%);
-            pointer-events: none;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(10,23,16,0.7), rgba(10,23,16,0.95));
+            z-index: 0;
         }
-
         .hero-content {
             position: relative;
             z-index: 1;
-            max-width: 640px;
+            max-width: 800px;
         }
-
-        .hero-logo {
-            font-size: 2.8rem;
+        .hero-title {
+            font-size: 3.5rem;
             font-weight: 800;
             color: #fff;
-            letter-spacing: -1.5px;
-            margin-bottom: 8px;
+            margin-bottom: 20px;
+            line-height: 1.1;
         }
-
-        .hero-logo span {
-            color: #4ade80;
-        }
-
+        .hero-title span { color: #4ade80; }
         .hero-tagline {
-            font-size: 1.1rem;
-            color: rgba(167, 201, 183, .85);
-            line-height: 1.7;
-            margin: 0 auto 36px;
-            max-width: 480px;
+            font-size: 1.25rem;
+            color: rgba(255,255,255,0.8);
+            line-height: 1.6;
+            margin: 0 auto 40px;
+            max-width: 600px;
         }
-
         .hero-buttons {
             display: flex;
-            gap: 14px;
+            gap: 16px;
             justify-content: center;
             flex-wrap: wrap;
-            margin-bottom: 40px;
         }
-
-        .hero-btn-primary {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 13px 36px;
-            background: #16a34a;
-            color: #fff;
-            border: none;
-            font-family: inherit;
-            font-size: .95rem;
-            font-weight: 600;
-            text-decoration: none;
-            transition: background .2s, transform .2s;
-        }
-
-        .hero-btn-primary:hover {
-            background: #15803d;
-            color: #fff;
-            transform: translateY(-2px);
-        }
-
-        .hero-btn-secondary {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 13px 36px;
+        .btn-hire {
+            padding: 14px 32px;
             background: transparent;
-            color: rgba(167, 201, 183, .9);
-            border: 1px solid rgba(167, 201, 183, .25);
-            font-family: inherit;
-            font-size: .95rem;
+            color: #4ade80;
+            border: 2px solid #4ade80;
             font-weight: 600;
+            font-size: 1rem;
             text-decoration: none;
-            transition: background .2s, transform .2s, border-color .2s;
+            border-radius: 4px;
+            transition: all 0.3s;
         }
-
-        .hero-btn-secondary:hover {
-            background: rgba(255, 255, 255, .05);
-            border-color: rgba(167, 201, 183, .5);
+        .btn-hire:hover {
+            background: rgba(74, 222, 128, 0.1);
             color: #fff;
+            border-color: #fff;
             transform: translateY(-2px);
         }
 
-        /* Features Section */
-        .features {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            max-width: 900px;
-            margin: 0 auto;
+        /* Section 2 - Detalhes */
+        .section-details {
+            padding: 100px 24px;
+            background: url('/background2.png') no-repeat center center;
+            background-size: cover;
+            position: relative;
+        }
+        .section-details::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(10,23,16,0.92);
+        }
+        .details-container {
             position: relative;
             z-index: 1;
+            max-width: 1100px;
+            margin: 0 auto;
         }
-
-        .feature-card {
-            background: rgba(255, 255, 255, .04);
-            border: 1px solid rgba(255, 255, 255, .06);
-            padding: 24px 20px;
+        .section-title {
             text-align: center;
-            transition: background .2s, border-color .2s, transform .2s;
-        }
-
-        .feature-card:hover {
-            background: rgba(255, 255, 255, .07);
-            border-color: rgba(74, 222, 128, .15);
-            transform: translateY(-3px);
-        }
-
-        .feature-icon {
-            font-size: 1.5rem;
-            color: #4ade80;
-            margin-bottom: 12px;
-        }
-
-        .feature-title {
-            font-size: .85rem;
-            font-weight: 600;
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 60px;
             color: #fff;
-            margin-bottom: 6px;
+        }
+        .section-title span { color: #4ade80; }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        .feature-box {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 40px 30px;
+            border-radius: 8px;
+            transition: transform 0.3s, background 0.3s;
+            backdrop-filter: blur(5px);
+        }
+        .feature-box:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(74,222,128,0.4);
+        }
+        .fb-icon {
+            font-size: 2.5rem;
+            color: #4ade80;
+            margin-bottom: 20px;
+        }
+        .fb-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+        .fb-desc {
+            font-size: 0.95rem;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.6;
         }
 
-        .feature-desc {
-            font-size: .78rem;
-            color: rgba(167, 201, 183, .6);
-            line-height: 1.5;
+        /* Section 3 - About / Info */
+        .section-info {
+            padding: 100px 24px;
+            background: url('/background3.png') no-repeat center center;
+            background-size: cover;
+            background-attachment: fixed;
+            position: relative;
+            text-align: center;
+        }
+        .section-info::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(10,23,16,1), rgba(10,23,16,0.8));
+        }
+        .info-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .info-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 24px;
+        }
+        .info-text {
+            font-size: 1.1rem;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 40px;
+            line-height: 1.7;
         }
 
         /* Home Footer */
         .home-footer {
             text-align: center;
-            padding: 20px 24px;
-            background: #0a1710;
+            padding: 40px 24px;
+            background: #060e0a;
             border-top: 1px solid rgba(255, 255, 255, .05);
+            position: relative;
+            z-index: 1;
+        }
+        .home-footer p {
+            color: rgba(167, 201, 183, .5);
+            font-size: 0.9rem;
+            margin-bottom: 10px;
         }
 
-        .home-footer small {
-            color: rgba(167, 201, 183, .35);
-            font-size: .72rem;
-        }
-
-        /* Responsivo */
         @media (max-width: 768px) {
-            .hero-logo { font-size: 2rem; }
-            .hero-tagline { font-size: .95rem; }
-            .features { grid-template-columns: 1fr; max-width: 400px; }
-            .hero-buttons { flex-direction: column; align-items: center; }
-            .hero-btn-primary, .hero-btn-secondary { width: 100%; max-width: 280px; justify-content: center; }
+            .hero-title { font-size: 2.5rem; }
+            .navbar-home { padding: 15px 20px; flex-direction: column; gap: 15px; }
+            .nav-links { width: 100%; justify-content: center; flex-wrap: wrap; }
+            .hero-buttons { flex-direction: column; }
+            .btn-hire, .nav-btn { width: 100%; text-align: center; }
         }
     </style>
 </head>
 <body>
+
+<nav class="navbar-home">
+    <a href="#" class="navbar-logo">Agro<span>Track</span></a>
+    <div class="nav-links">
+        <a href="#solucoes" class="nav-link">Soluções</a>
+        <a href="#sobre" class="nav-link">Sobre</a>
+        <a href="#contato" class="nav-link">Contato</a>
+        <a th:href="@{/login}" class="nav-btn"><i class="bi bi-box-arrow-in-right"></i> Entrar</a>
+    </div>
+</nav>
+
 <div class="home-page">
     <section class="hero">
         <div class="hero-content">
-            <h1 class="hero-logo">Agro<span>Track</span></h1>
+            <h1 class="hero-title">O Futuro da sua <span>Propriedade Rural</span> começa aqui</h1>
             <p class="hero-tagline">
-                Gestão inteligente de máquinas, manutenções e operações<br>
-                para sua propriedade rural.
+                Nós transformamos a complexidade da gestão do campo em processos simples, inteligentes e altamente eficientes. Tenha o controle total da sua frota na palma da mão.
             </p>
             <div class="hero-buttons">
-                <a th:href="@{/login}" class="hero-btn-primary">
-                    <i class="bi bi-box-arrow-in-right"></i>
-                    Acessar o Sistema
+                <a th:href="@{/login}" class="nav-btn" style="padding: 14px 32px; font-size: 1rem;">
+                    Acessar Sistema
+                </a>
+                <a href="#contato" class="btn-hire">
+                    Entre em contato para contratar
                 </a>
             </div>
+        </div>
+    </section>
 
-            <div class="features">
-                <div class="feature-card">
-                    <div class="feature-icon"><i class="bi bi-truck"></i></div>
-                    <div class="feature-title">Controle de Máquinas</div>
-                    <div class="feature-desc">Cadastre e acompanhe toda a sua frota agrícola em um só lugar.</div>
+    <section id="solucoes" class="section-details">
+        <div class="details-container">
+            <h2 class="section-title">O que o sistema <span>entrega</span></h2>
+            <div class="features-grid">
+                <div class="feature-box">
+                    <div class="fb-icon"><i class="bi bi-truck"></i></div>
+                    <div class="fb-title">Gestão de Máquinas</div>
+                    <div class="fb-desc">Cadastre, acompanhe e monitore toda a sua frota. Saiba onde e como seus equipamentos estão sendo utilizados para otimizar operações.</div>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon"><i class="bi bi-wrench-adjustable"></i></div>
-                    <div class="feature-title">Ordens de Manutenção</div>
-                    <div class="feature-desc">Registre e gerencie manutenções preventivas e corretivas.</div>
+                <div class="feature-box">
+                    <div class="fb-icon"><i class="bi bi-tools"></i></div>
+                    <div class="fb-title">Controle de Manutenções</div>
+                    <div class="fb-desc">Previna falhas inesperadas. Crie ordens de serviço, gerencie manutenções preventivas e corretivas e reduza o tempo de máquina parada.</div>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon"><i class="bi bi-fuel-pump"></i></div>
-                    <div class="feature-title">Abastecimentos</div>
-                    <div class="feature-desc">Monitore o consumo de combustível e reduza custos operacionais.</div>
+                <div class="feature-box">
+                    <div class="fb-icon"><i class="bi bi-fuel-pump"></i></div>
+                    <div class="fb-title">Monitoramento de Consumo</div>
+                    <div class="fb-desc">Registre todos os abastecimentos e tenha relatórios precisos sobre o consumo de combustível, reduzindo custos operacionais significativamente.</div>
+                </div>
+                <div class="feature-box">
+                    <div class="fb-icon"><i class="bi bi-people"></i></div>
+                    <div class="fb-title">Gestão de Equipes</div>
+                    <div class="fb-desc">Controle o acesso de operadores, mecânicos e gestores. Defina funções e monitore a produtividade de cada colaborador em campo.</div>
+                </div>
+                <div class="feature-box">
+                    <div class="fb-icon"><i class="bi bi-bell"></i></div>
+                    <div class="fb-title">Notificações Inteligentes</div>
+                    <div class="fb-desc">Receba alertas em tempo real sobre manutenções atrasadas, baixo nível de estoque e ocorrências urgentes registradas pelos operadores.</div>
+                </div>
+                <div class="feature-box">
+                    <div class="fb-icon"><i class="bi bi-graph-up-arrow"></i></div>
+                    <div class="fb-title">Dashboard e Relatórios</div>
+                    <div class="fb-desc">Tome decisões baseadas em dados. Visualize indicadores chave de desempenho em um painel intuitivo e gere relatórios completos.</div>
                 </div>
             </div>
         </div>
     </section>
 
+    <section id="sobre" class="section-info">
+        <div class="info-content">
+            <h2 class="info-title">Por que escolher o AgroTrack?</h2>
+            <p class="info-text">
+                Desenvolvido por quem entende os desafios do agronegócio, o AgroTrack nasceu com a missão de trazer tecnologia de ponta para o dia a dia do produtor rural. Nossa plataforma é robusta, segura e adaptável a propriedades de diferentes tamanhos, garantindo que você tenha o melhor retorno sobre o investimento da sua frota.
+            </p>
+            <div id="contato" style="margin-top: 50px;">
+                <h3 style="color: #4ade80; margin-bottom: 20px; font-size: 1.8rem;">Pronto para transformar sua gestão?</h3>
+                <a href="mailto:contato@agrotrack.com.br" class="btn-hire" onclick="alert('Isto simularia o redirecionamento para o WhatsApp ou e-mail da equipe comercial!')">
+                    Entre em contato para contratar nossos serviços
+                </a>
+            </div>
+        </div>
+    </section>
+
     <footer class="home-footer">
-        <small>&copy; 2026 <strong>AgroTrack</strong>. Todos os direitos reservados.</small>
+        <p>&copy; 2026 <strong>AgroTrack</strong>. O sistema definitivo para gestão de frotas agrícolas.</p>
+        <p>Desenvolvido para revolucionar o campo.</p>
     </footer>
 </div>
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
