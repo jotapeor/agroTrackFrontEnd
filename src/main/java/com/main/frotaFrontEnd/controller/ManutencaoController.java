@@ -117,6 +117,25 @@ public class ManutencaoController {
         return "redirect:/ordens";
     }
 
+    @PostMapping("/{id}/remover")
+    public String removerOrdem(
+            @PathVariable Long id,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+        if (!isProprietario(session)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Acesso negado.");
+            return "redirect:/ordens";
+        }
+        String token = (String) session.getAttribute("token");
+        try {
+            apiService.removerOrdem(id, token);
+            redirectAttributes.addFlashAttribute("mensagemSucesso", "Ordem removida da aba com sucesso!");
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Erro ao remover ordem da aba.");
+        }
+        return "redirect:/ordens";
+    }
+
     private boolean isProprietario(HttpSession session) {
         return session.getAttribute("token") != null && "PROPRIETARIO".equals(session.getAttribute("role"));
     }

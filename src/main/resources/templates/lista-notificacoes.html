@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <th:block th:replace="~{fragments/layout :: head-content}"></th:block>
     <style>
-        .notif-card { background: var(--at-surface); border: 1px solid var(--at-border); border-radius: var(--at-radius); padding: 16px; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 16px; }
+        .notif-card { background: var(--at-surface); border: 1px solid var(--at-border); border-radius: 16px; padding: 24px; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 16px; box-shadow: 0 10px 30px rgba(148, 163, 184, 0.08); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease; }
+        .notif-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(148, 163, 184, 0.12); }
         .notif-card.nao-lida { border-left: 4px solid var(--at-primary); background: #f8fafc; }
         .notif-icon { font-size: 1.5rem; }
         .notif-icon.anomalia { color: var(--at-danger); }
@@ -24,7 +25,7 @@
     <div class="at-main">
         <div th:replace="~{fragments/layout :: topbar('Notificações')}"></div>
         <main class="at-content">
-            <div class="at-page-header">
+            <div class="at-page-header fade-in">
                 <h1 class="at-page-title">Notificações</h1>
                 <p class="at-page-subtitle">Acompanhe seus alertas e mensagens importantes.</p>
             </div>
@@ -37,8 +38,8 @@
                 Você não possui nenhuma notificação.
             </div>
 
-            <div th:each="n : ${notificacoes}" class="notif-card" th:classappend="${!n.lida} ? 'nao-lida' : ''">
-                <div class="notif-icon" 
+            <div th:each="n, iterStat : ${notificacoes}" class="notif-card fade-in" th:classappend="${!n.lida} ? 'nao-lida' : ''" th:style="'animation-delay: ' + ${#numbers.formatDecimal(iterStat.index * 0.05, 1, 2, 'POINT')} + 's'">
+                <div class="notif-icon"
                      th:classappend="${n.tipo == 'anomalia' ? 'anomalia bi-exclamation-triangle-fill' : (n.tipo == 'alerta_preventivo' ? 'alerta_preventivo bi-cone-striped' : 'ordem bi-info-circle-fill')}">
                 </div>
                 <div class="notif-content">

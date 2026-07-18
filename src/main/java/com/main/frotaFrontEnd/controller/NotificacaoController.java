@@ -39,7 +39,7 @@ public class NotificacaoController {
     public String marcarComoLida(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
         String token = (String) session.getAttribute("token");
         if (token == null) return "redirect:/login";
-        
+
         try {
             apiService.marcarNotificacaoLida(id, token);
         } catch (Exception e) {

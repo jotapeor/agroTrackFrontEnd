@@ -57,7 +57,6 @@ public class MeuPerfilController {
         try {
             Map<String, Object> resposta = apiService.atualizarMeusDados(nome, email, foto, token);
 
-            // Atualizar dados na sessão se veio novo token
             String novoTicket = (String) resposta.get("token");
             if (novoTicket != null) {
                 session.setAttribute("token", novoTicket);

@@ -12,7 +12,7 @@
     <div class="at-main">
         <div th:replace="~{fragments/layout :: topbar('Nova Ordem de Manutenção')}"></div>
         <main class="at-content">
-            <div class="at-page-header">
+            <div class="at-page-header fade-in">
                 <h1 class="at-page-title">Nova Ordem de Manutenção</h1>
                 <p class="at-page-subtitle">Preencha os dados abaixo para registrar uma ordem de manutenção.</p>
             </div>
@@ -21,7 +21,7 @@
                 <i class="bi bi-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
             </div>
 
-            <form th:action="@{/ordens/nova}" method="post" class="at-form-container">
+            <form th:action="@{/ordens/nova}" method="post" class="at-form-container at-card fade-in delay-1" style="padding: 24px; border-radius: 16px;">
                 <div class="at-form-group">
                     <label class="at-form-label">Máquina <span class="required">*</span></label>
                     <select name="idMaquina" class="at-form-control" required>
@@ -47,8 +47,8 @@
                 </div>
 
                 <div class="at-form-actions">
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Registrar Ordem</button>
-                    <a th:href="@{/ordens}" class="btn btn-outline">Cancelar</a>
+                    <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-save"></i> Registrar Ordem</button>
+                    <a th:href="@{/ordens}" class="btn btn-outline btn-lg">Cancelar</a>
                 </div>
             </form>
         </main>

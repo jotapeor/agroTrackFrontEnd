@@ -14,7 +14,7 @@
     <div class="at-main">
         <div th:replace="~{fragments/layout :: topbar('Meu Perfil')}"></div>
         <main class="at-content" id="main-content">
-            <div class="at-page-header">
+            <div class="at-page-header fade-in">
                 <h1 class="at-page-title">Meu Perfil</h1>
                 <p class="at-page-subtitle">Edite seus dados pessoais.</p>
             </div>
@@ -27,7 +27,7 @@
             </div>
 
             <div style="max-width: 640px;">
-                <div class="at-card">
+                <div class="at-card fade-in delay-1">
                     <div class="at-card-header">
                         <h2 class="at-card-title">Dados da Conta</h2>
                         <span class="at-badge"
@@ -73,11 +73,11 @@
                                 <span>Para alterar sua senha, use a opção de "Alterar Senha" no primeiro acesso ou pelo dashboard.</span>
                             </div>
 
-                            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                                <button type="submit" class="btn btn-primary">
+                            <div class="at-form-actions">
+                                <button type="submit" class="btn btn-primary btn-lg">
                                     <i class="bi bi-check-lg"></i> Salvar Alterações
                                 </button>
-                                <a th:href="@{/dashboard}" class="btn btn-ghost">
+                                <a th:href="@{/dashboard}" class="btn btn-ghost btn-lg">
                                     Cancelar
                                 </a>
                             </div>

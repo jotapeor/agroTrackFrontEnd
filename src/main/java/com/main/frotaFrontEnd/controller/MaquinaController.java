@@ -110,11 +110,29 @@ public class MaquinaController {
         String token = (String) session.getAttribute("token");
         try {
             apiService.excluirMaquina(id, token);
-            redirectAttributes.addFlashAttribute("mensagemSucesso", "Máquina excluída com sucesso!");
+            redirectAttributes.addFlashAttribute("mensagemSucesso", "Máquina arquivada com sucesso!");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Erro ao excluir máquina.");
+            redirectAttributes.addFlashAttribute("errorMessage", "Erro ao arquivar máquina.");
         }
         return "redirect:/maquinas";
+    }
+
+    @GetMapping("/maquinas/{id}/detalhes")
+    public String detalhesMaquina(@PathVariable Long id, HttpSession session, Model model, RedirectAttributes redirectAttributes) {
+        String token = (String) session.getAttribute("token");
+        if (token == null) {
+            return "redirect:/login";
+        }
+        try {
+            Map<String, Object> maquina = apiService.buscarMaquina(id, token);
+            List<Map<String, Object>> historico = apiService.obterHistoricoCompleto(id, token);
+            model.addAttribute("maquina", maquina);
+            model.addAttribute("historico", historico);
+            return "detalhes-maquina";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Erro ao carregar histórico: " + e.getMessage());
+            return "redirect:/maquinas";
+        }
     }
 
     @GetMapping("/nova-maquina")
@@ -222,8 +240,12 @@ public class MaquinaController {
             return "redirect:/login";
         }
         try {
-            apiService.trocarStatusMaquina(id, novoStatus, confirmacao, pesoCarregado, hodometroFim, observacoes, token);
+            Map<String, Object> resumo = apiService.trocarStatusMaquina(id, novoStatus, confirmacao, pesoCarregado, hodometroFim, observacoes, token);
             redirectAttributes.addFlashAttribute("mensagemSucesso", "Status atualizado com sucesso!");
+            if (resumo != null && !resumo.isEmpty()) {
+                redirectAttributes.addFlashAttribute("resumoOperacao", resumo);
+                return "redirect:/maquinas/" + id + "/status";
+            }
             return "redirect:/maquinas";
         } catch (RuntimeException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
@@ -253,6 +275,36 @@ public class MaquinaController {
             redirectAttributes.addFlashAttribute("errorMessage", "Erro inesperado.");
         }
         return "redirect:/maquinas/" + id + "/status";
+    }
+
+    @GetMapping("/maquinas/{id}/telemetria")
+    public String telemetria(@PathVariable Long id, HttpSession session, Model model, RedirectAttributes redirectAttributes) {
+        String token = (String) session.getAttribute("token");
+        String role = (String) session.getAttribute("role");
+        if (token == null || (!"PROPRIETARIO".equals(role) && !"SOCIO".equals(role))) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Acesso negado.");
+            return "redirect:/maquinas";
+        }
+        try {
+            Map<String, Object> maquina = apiService.buscarMaquina(id, token);
+            model.addAttribute("maquina", maquina);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Máquina não encontrada.");
+            return "redirect:/maquinas";
+        }
+        return "telemetria";
+    }
+
+    @GetMapping("/api/maquinas/{id}/telemetria/dados")
+    @ResponseBody
+    public Map<String, Object> telemetriaDados(@PathVariable Long id, HttpSession session) {
+        String token = (String) session.getAttribute("token");
+        if (token == null) return Map.of("error", "Não autenticado");
+        try {
+            return apiService.obterTelemetria(id, token);
+        } catch (Exception e) {
+            return Map.of("error", e.getMessage());
+        }
     }
 
     private boolean isProprietario(HttpSession session) {
