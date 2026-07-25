@@ -34,9 +34,11 @@
                     <form th:action="@{/abastecimentos}" method="post">
                         <div class="at-form-group">
                             <label class="at-form-label" for="idMaquina">Máquina <span class="required">*</span></label>
-                            <select id="idMaquina" name="idMaquina" class="at-form-control at-form-select" required>
+                            <select id="idMaquina" name="idMaquina" class="at-form-control at-form-select" required onchange="onMaquinaChange(this)">
                                 <option value="">Selecione a máquina...</option>
-                                <option th:each="m : ${maquinas}" th:value="${m.id}" th:text="${m.nome} + ' (' + ${m.marca} + ' ' + ${m.modelo} + ')'"></option>
+                                <option th:each="m : ${maquinas}" th:value="${m.id}"
+                                        th:text="${m.nome} + ' (' + ${m.marca} + ' ' + ${m.modelo} + ')'"
+                                        th:attr="data-hodometro=${m.hodometroInicial}"></option>
                             </select>
                         </div>
 
@@ -49,11 +51,7 @@
                             <div class="at-form-group">
                                 <label class="at-form-label" for="tipoCombustivel">Combustível <span class="required">*</span></label>
                                 <select id="tipoCombustivel" name="tipoCombustivel" class="at-form-control at-form-select" required>
-                                    <option value="">Selecione</option>
-                                    <option value="Diesel S10">Diesel S10</option>
-                                    <option value="Diesel S500">Diesel S500</option>
-                                    <option value="Gasolina">Gasolina</option>
-                                    <option value="Etanol">Etanol</option>
+                                    <option value="">Selecione a máquina primeiro</option>
                                 </select>
                             </div>
                         </div>
@@ -66,6 +64,7 @@
                             <div class="at-form-group">
                                 <label class="at-form-label" for="hodometroAtual">Hodômetro / Horímetro Atual <span class="required">*</span></label>
                                 <input type="number" step="0.1" min="0" id="hodometroAtual" name="hodometroAtual" class="at-form-control" placeholder="Ex: 1250.5" required>
+                                <span class="at-form-hint" id="hodometro-hint"></span>
                             </div>
                         </div>
 
@@ -80,5 +79,50 @@
     </div>
 </div>
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script>
+    function onMaquinaChange(selectEl) {
+        const idMaquina = selectEl.value;
+        const selectComb = document.getElementById('tipoCombustivel');
+        const hodInput = document.getElementById('hodometroAtual');
+        const hint = document.getElementById('hodometro-hint');
+
+        selectComb.innerHTML = '<option value="">Carregando...</option>';
+        selectComb.disabled = true;
+
+        if (!idMaquina) {
+            selectComb.innerHTML = '<option value="">Selecione a máquina primeiro</option>';
+            hodInput.min = '0';
+            hodInput.placeholder = 'Ex: 1250.5';
+            hint.textContent = '';
+            return;
+        }
+
+        const opt = selectEl.selectedOptions[0];
+        const hodMin = parseFloat(opt.dataset.hodometro) || 0;
+        hodInput.min = hodMin;
+        hodInput.placeholder = 'Mínimo: ' + hodMin;
+        hint.textContent = 'Hodômetro atual registrado: ' + hodMin + ' h/km';
+
+        fetch('/api/maquinas/' + idMaquina + '/combustiveis')
+            .then(r => r.json())
+            .then(tipos => {
+                selectComb.innerHTML = '';
+                const lista = (tipos && tipos.length > 0) ? tipos : ['Diesel S10', 'Diesel S500', 'Gasolina', 'Etanol'];
+                lista.forEach(t => {
+                    const o = document.createElement('option');
+                    o.value = t;
+                    o.textContent = t;
+                    selectComb.appendChild(o);
+                });
+                selectComb.disabled = tipos && tipos.length === 1;
+                if (tipos && tipos.length === 1) selectComb.title = 'Esta máquina aceita apenas ' + tipos[0];
+                else selectComb.title = '';
+            })
+            .catch(() => {
+                selectComb.innerHTML = '<option value="Diesel S10">Diesel S10</option><option value="Diesel S500">Diesel S500</option><option value="Gasolina">Gasolina</option><option value="Etanol">Etanol</option>';
+                selectComb.disabled = false;
+            });
+    }
+</script>
 </body>
 </html>

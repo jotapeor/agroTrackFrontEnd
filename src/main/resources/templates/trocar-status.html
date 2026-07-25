@@ -99,7 +99,7 @@
                         <h2 class="at-card-title">Atualizar Status</h2>
                     </div>
                     <div class="at-card-body">
-                        <form th:action="@{/maquinas/{id}/status(id=${maquina.id})}" method="post">
+                        <form id="form-trocar-status" th:action="@{/maquinas/{id}/status(id=${maquina.id})}" method="post">
                             <div class="at-form-group">
                                 <label class="at-form-label" for="novoStatus">Novo Status</label>
                                 <select id="novoStatus" name="novoStatus" class="at-form-control at-form-select" required onchange="toggleCampos(this.value, '[[${maquina.status}]]', '[[${maquina.tipo}]]')">
@@ -136,7 +136,7 @@
                                 </div>
                             </div>
 
-                            <button type="submit" class="btn btn-primary" style="width: 100%;">Atualizar Status</button>
+                            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 12px;">Atualizar Status</button>
                         </form>
                     </div>
                 </div>
@@ -220,16 +220,46 @@
     function toggleCampos(novoStatus, statusAtual, tipoMaquina) {
         var iniciar = document.getElementById('campos-iniciar-operacao');
         var encerrar = document.getElementById('campos-encerrar-operacao');
+        var hodFim = document.getElementById('hodometroFim');
+        var obs = document.getElementById('observacoes');
 
         iniciar.style.display = 'none';
         encerrar.style.display = 'none';
+        if (hodFim) hodFim.removeAttribute('required');
+        if (obs) obs.removeAttribute('required');
 
         if (novoStatus === 'Em Operacao') {
             iniciar.style.display = 'block';
         } else if (statusAtual === 'Em Operacao' && novoStatus !== '') {
             encerrar.style.display = 'block';
+            if (hodFim) hodFim.setAttribute('required', '');
+            if (obs) obs.setAttribute('required', '');
         }
     }
+
+    (function() {
+        var form = document.getElementById('form-trocar-status');
+        if (!form) return;
+        form.addEventListener('submit', function(e) {
+            var encerrar = document.getElementById('campos-encerrar-operacao');
+            if (encerrar && encerrar.style.display !== 'none') {
+                var obs = document.getElementById('observacoes');
+                if (obs && obs.value.trim() === '') {
+                    e.preventDefault();
+                    obs.focus();
+                    obs.setCustomValidity('Observações são obrigatórias ao encerrar uma operação.');
+                    obs.reportValidity();
+                    return;
+                }
+            }
+        });
+        var obs = document.getElementById('observacoes');
+        if (obs) {
+            obs.addEventListener('input', function() {
+                this.setCustomValidity('');
+            });
+        }
+    })();
 </script>
 </body>
 </html>

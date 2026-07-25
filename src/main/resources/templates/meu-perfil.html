@@ -53,7 +53,9 @@
                             <div class="at-form-group">
                                 <label class="at-form-label" for="email">E-mail <span class="required">*</span></label>
                                 <input type="email" id="email" name="email" class="at-form-control"
-                                       th:value="${usuario.email}" required />
+                                       th:value="${usuario.email}" required
+                                       th:attr="data-id-atual=${usuario.id_usuario}" />
+                                <span id="email-feedback" style="font-size:0.85rem; margin-top:4px; display:none;"></span>
                             </div>
 
                             <div class="at-form-group">
@@ -109,6 +111,49 @@
                     previewDiv.style.display = 'none';
                     previewImg.src = '#';
                 }
+            });
+        }
+
+        const emailInput = document.getElementById('email');
+        const emailFeedback = document.getElementById('email-feedback');
+        const btnSalvar = document.querySelector('button[type="submit"]');
+        let emailDebounceTimer = null;
+
+        if (emailInput && emailFeedback) {
+            const idAtual = emailInput.getAttribute('data-id-atual');
+
+            emailInput.addEventListener('input', function() {
+                clearTimeout(emailDebounceTimer);
+                const email = this.value.trim();
+                emailFeedback.style.display = 'none';
+                emailInput.setCustomValidity('');
+
+                if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+
+                emailDebounceTimer = setTimeout(function() {
+                    fetch('/api/usuarios/email-disponivel?email=' + encodeURIComponent(email) + '&idAtual=' + idAtual)
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.disponivel === false) {
+                                emailFeedback.textContent = 'Este e-mail já está em uso por outro usuário.';
+                                emailFeedback.style.color = 'var(--at-danger)';
+                                emailFeedback.style.display = 'block';
+                                emailInput.setCustomValidity('E-mail já em uso.');
+                                if (btnSalvar) btnSalvar.disabled = true;
+                            } else {
+                                emailFeedback.textContent = 'E-mail disponível.';
+                                emailFeedback.style.color = 'var(--at-primary)';
+                                emailFeedback.style.display = 'block';
+                                emailInput.setCustomValidity('');
+                                if (btnSalvar) btnSalvar.disabled = false;
+                            }
+                        })
+                        .catch(function() {
+                            emailFeedback.style.display = 'none';
+                            emailInput.setCustomValidity('');
+                            if (btnSalvar) btnSalvar.disabled = false;
+                        });
+                }, 450);
             });
         }
     });

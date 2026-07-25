@@ -2,6 +2,8 @@ package com.main.frotaFrontEnd.controller;
 
 import com.main.frotaFrontEnd.service.ApiService;
 import jakarta.servlet.http.HttpSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,6 +15,8 @@ import java.util.Map;
 
 @Controller
 public class RelatorioController {
+
+    private static final Logger log = LoggerFactory.getLogger(RelatorioController.class);
 
     @Autowired
     private ApiService apiService;
@@ -53,6 +57,7 @@ public class RelatorioController {
         try {
             return apiService.relatorioConsumo(dataInicio, dataFim, token);
         } catch (Exception e) {
+            log.error("Erro ao buscar relatório consumo-por-maquina", e);
             return List.of();
         }
     }
@@ -68,6 +73,7 @@ public class RelatorioController {
         try {
             return apiService.relatorioRisco(dataInicio, dataFim, token);
         } catch (Exception e) {
+            log.error("Erro ao buscar relatório risco-distribuicao", e);
             return Map.of();
         }
     }
@@ -83,6 +89,7 @@ public class RelatorioController {
         try {
             return apiService.relatorioOrdensPorStatus(dataInicio, dataFim, token);
         } catch (Exception e) {
+            log.error("Erro ao buscar relatório ordens-por-status", e);
             return Map.of();
         }
     }
@@ -100,6 +107,7 @@ public class RelatorioController {
         try {
             return apiService.relatorioHorasKm(dataInicio, dataFim, idMaquina, idOperador, token);
         } catch (Exception e) {
+            log.error("Erro ao buscar relatório horas-km", e);
             return List.of();
         }
     }
@@ -115,6 +123,7 @@ public class RelatorioController {
         try {
             return apiService.relatorioAlertasTimeline(dataInicio, dataFim, token);
         } catch (Exception e) {
+            log.error("Erro ao buscar relatório alertas-timeline", e);
             return List.of();
         }
     }

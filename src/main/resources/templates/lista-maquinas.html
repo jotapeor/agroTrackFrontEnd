@@ -16,7 +16,7 @@
         .machine-card-name { font-size:.95rem; font-weight:700; color:var(--at-text); margin-bottom:2px; }
         .machine-card-detail { font-size:.8rem; color:var(--at-text-secondary); margin-bottom:2px; }
         .machine-card-tags { display:flex; gap:6px; flex-wrap:wrap; margin:8px 0; }
-        .machine-card-actions { display:flex; gap:6px; margin-top:auto; padding-top:10px; border-top:1px solid var(--at-border); }
+        .machine-card-actions { display:flex; gap:6px; flex-wrap:wrap; margin-top:auto; padding-top:10px; border-top:1px solid var(--at-border); }
         .machine-card-actions form { display:inline; }
         .empty-state { grid-column:1/-1; text-align:center; padding:60px 20px; color:var(--at-text-muted); }
         .empty-state i { font-size:3rem; display:block; margin-bottom:12px; }
@@ -36,6 +36,12 @@
                 </div>
                 <a th:if="${session.role == 'PROPRIETARIO'}" th:href="@{/nova-maquina}" class="btn btn-primary">
                     <i class="bi bi-plus-lg"></i> Nova Máquina
+                </a>
+            </div>
+
+            <div th:if="${session.role == 'PROPRIETARIO'}" style="margin-bottom:12px;">
+                <a th:href="@{/maquinas/arquivadas}" class="btn btn-outline btn-sm" style="color:var(--at-text-secondary);">
+                    <i class="bi bi-archive"></i> Ver Máquinas Arquivadas
                 </a>
             </div>
 

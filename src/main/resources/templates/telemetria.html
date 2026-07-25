@@ -16,6 +16,8 @@
         .pulse-indicator { display:inline-block; width:10px; height:10px; border-radius:50%; background-color:#10b981; margin-right:8px; box-shadow: 0 0 0 rgba(16, 185, 129, 0.4); animation: pulse 2s infinite; }
         .stopped-indicator { display:inline-block; width:10px; height:10px; border-radius:50%; background-color:#ef4444; margin-right:8px; }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+        @keyframes valueFlash { 0% { color: var(--at-primary); } 60% { color: #22c55e; } 100% { color: var(--at-primary); } }
+        .value-updated { animation: valueFlash 0.6s ease; }
     </style>
 </head>
 <body>
@@ -85,8 +87,13 @@
 
     function atualizarTelemetria() {
         fetch('/api/maquinas/' + idMaquina + '/telemetria/dados')
-            .then(res => res.json())
+            .then(res => {
+                if (res.status === 302 || res.url.includes('/login')) { window.location.href = '/login'; return null; }
+                if (res.status === 401 || res.status === 403) { window.location.href = '/login'; return null; }
+                return res.json();
+            })
             .then(data => {
+                if (!data) return;
                 if (data.error) {
                     console.error(data.error);
                     return;
@@ -105,11 +112,20 @@
                     document.getElementById('status-text').style.color = '#ef4444';
                 }
 
-                document.getElementById('val-operador').innerText = data.operadorAtual || 'Nenhum';
-                document.getElementById('val-velocidade').innerText = data.velocidadeAtual !== null ? parseFloat(data.velocidadeAtual).toFixed(1) : '--';
-                document.getElementById('val-consumo').innerText = data.consumoAtual !== null ? parseFloat(data.consumoAtual).toFixed(1) : '--';
-                document.getElementById('val-lat').innerText = data.latitude !== null ? data.latitude : '--';
-                document.getElementById('val-lon').innerText = data.longitude !== null ? data.longitude : '--';
+                function setValor(id, novo) {
+                    const el = document.getElementById(id);
+                    if (el && el.innerText !== String(novo)) {
+                        el.innerText = novo;
+                        el.classList.remove('value-updated');
+                        void el.offsetWidth;
+                        el.classList.add('value-updated');
+                    }
+                }
+                setValor('val-operador', data.operadorAtual || 'Nenhum');
+                setValor('val-velocidade', data.velocidadeAtual !== null ? parseFloat(data.velocidadeAtual).toFixed(1) : '--');
+                setValor('val-consumo', data.consumoAtual !== null ? parseFloat(data.consumoAtual).toFixed(1) : '--');
+                setValor('val-lat', data.latitude !== null ? data.latitude : '--');
+                setValor('val-lon', data.longitude !== null ? data.longitude : '--');
             })
             .catch(err => console.error("Erro ao buscar telemetria", err));
     }

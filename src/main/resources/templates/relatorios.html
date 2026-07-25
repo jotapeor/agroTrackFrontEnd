@@ -41,7 +41,7 @@
                 <p class="at-page-subtitle">Inteligência de dados e visão operacional unificada</p>
             </div>
 
-            <div class="at-panel-glass fade-in delay-1">
+            <div class="at-panel-glass fade-in delay-1" style="display:flex; flex-wrap:wrap; gap:16px; align-items:flex-end;">
                 <div class="filter-group">
                     <label for="dataInicio">Data Inicial</label>
                     <input type="date" id="dataInicio" class="at-form-control">
@@ -64,7 +64,7 @@
                         <option th:each="o : ${operadores}" th:value="${o.id_usuario}" th:text="${o.nome}"></option>
                     </select>
                 </div>
-                <div>
+                <div style="align-self: flex-end;">
                     <button class="btn btn-primary" onclick="loadAllCharts()">
                         <i class="bi bi-magic"></i> Atualizar Dados
                     </button>
@@ -387,6 +387,14 @@
                     }
                 });
             });
+    }
+
+    function loadAllCharts() {
+        loadConsumo();
+        loadRisco();
+        loadOrdens();
+        loadAlertas();
+        loadHorasKm();
     }
 </script>
 </body>

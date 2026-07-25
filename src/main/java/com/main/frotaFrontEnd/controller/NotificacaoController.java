@@ -47,4 +47,18 @@ public class NotificacaoController {
         }
         return "redirect:/notificacoes";
     }
+
+    @PostMapping("/{id}/remover")
+    public String removerNotificacao(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
+        String token = (String) session.getAttribute("token");
+        if (token == null) return "redirect:/login";
+
+        try {
+            apiService.removerNotificacao(id, token);
+            redirectAttributes.addFlashAttribute("mensagemSucesso", "Notificação removida com sucesso.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Erro ao remover notificação.");
+        }
+        return "redirect:/notificacoes";
+    }
 }

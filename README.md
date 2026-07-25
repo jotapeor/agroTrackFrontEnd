@@ -1,4 +1,4 @@
-# AgroTrack Frontend
+# AgroTrack FrontEnd
 
 Server-rendered web client for AgroTrack, an agricultural fleet management system developed as an undergraduate thesis project (TCC). Consumes the [AgroTrack Backend](https://github.com/jotapeor/agroTrackBackEnd) REST API.
 

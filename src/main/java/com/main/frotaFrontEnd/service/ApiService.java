@@ -114,6 +114,7 @@ public class ApiService {
                                     String nome, String tipo, String marca, String modelo, int ano,
                                     String numeroSerie, String placa, String hodometroInicial,
                                     String capacidadeTanque, String tipoCombustivel,
+                                    java.util.List<String> combustivelExtra,
                                     String intervaloTrocaOleo, String intervaloInspecao,
                                     String consumoMedio, String idFazenda, String idTalhao,
                                     String dataAquisicao, String valorAquisicao,
@@ -130,6 +131,7 @@ public class ApiService {
         if (placa != null && !placa.isEmpty()) body.add("placa", placa);
         if (capacidadeTanque != null && !capacidadeTanque.isEmpty()) body.add("capacidade_tanque", capacidadeTanque);
         if (tipoCombustivel != null && !tipoCombustivel.isEmpty()) body.add("tipo_combustivel", tipoCombustivel);
+        if (combustivelExtra != null) { for (String c : combustivelExtra) { if (c != null && !c.isEmpty()) body.add("combustivel_extra", c); } }
         if (intervaloTrocaOleo != null && !intervaloTrocaOleo.isEmpty()) body.add("intervalo_troca_oleo_horas", intervaloTrocaOleo);
         if (intervaloInspecao != null && !intervaloInspecao.isEmpty()) body.add("intervalo_inspecao_horas", intervaloInspecao);
         if (consumoMedio != null && !consumoMedio.isEmpty()) body.add("consumo_medio", consumoMedio);
@@ -191,6 +193,7 @@ public class ApiService {
                                     Long id, String nome, String tipo, String marca, String modelo, int ano,
                                     String numeroSerie, String placa, String hodometroInicial,
                                     String capacidadeTanque, String tipoCombustivel,
+                                    java.util.List<String> combustivelExtra,
                                     String intervaloTrocaOleo, String intervaloInspecao,
                                     String consumoMedio, String idFazenda, String idTalhao,
                                     String status, String nivelRisco,
@@ -208,6 +211,7 @@ public class ApiService {
         if (placa != null && !placa.isEmpty()) body.add("placa", placa);
         if (capacidadeTanque != null && !capacidadeTanque.isEmpty()) body.add("capacidade_tanque", capacidadeTanque);
         if (tipoCombustivel != null && !tipoCombustivel.isEmpty()) body.add("tipo_combustivel", tipoCombustivel);
+        if (combustivelExtra != null) { for (String c : combustivelExtra) { if (c != null && !c.isEmpty()) body.add("combustivel_extra", c); } }
         if (intervaloTrocaOleo != null && !intervaloTrocaOleo.isEmpty()) body.add("intervalo_troca_oleo_horas", intervaloTrocaOleo);
         if (intervaloInspecao != null && !intervaloInspecao.isEmpty()) body.add("intervalo_inspecao_horas", intervaloInspecao);
         if (consumoMedio != null && !consumoMedio.isEmpty()) body.add("consumo_medio", consumoMedio);
@@ -234,6 +238,34 @@ public class ApiService {
                 .header("Authorization", "Bearer " + token)
                 .retrieve()
                 .body(String.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.List<java.util.Map<String, Object>> listarMaquinasArquivadas(String token) {
+        return restClient.get()
+                .uri("/proprietario/maquinas/arquivadas")
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(java.util.List.class);
+    }
+
+    public String reativarMaquina(Long id, String token) {
+        return restClient.post()
+                .uri("/proprietario/maquinas/{id}/reativar", id)
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(String.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.Map<String, Object> verificarEmailDisponivel(String email, Long idAtual, String token) {
+        String uri = "/usuarios/email-disponivel?email=" + email;
+        if (idAtual != null) uri += "&idAtual=" + idAtual;
+        return restClient.get()
+                .uri(uri)
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(java.util.Map.class);
     }
 
     @SuppressWarnings("unchecked")
@@ -326,9 +358,7 @@ public class ApiService {
         if (hodometroFim != null && !hodometroFim.isEmpty()) {
             body.put("hodometroFim", new java.math.BigDecimal(hodometroFim));
         }
-        if (observacoes != null && !observacoes.isEmpty()) {
-            body.put("observacoes", observacoes);
-        }
+        body.put("observacoes", observacoes != null ? observacoes : "");
 
         try {
             return restClient.post()
@@ -338,17 +368,13 @@ public class ApiService {
                     .retrieve()
                     .body(java.util.Map.class);
         } catch (org.springframework.web.client.HttpClientErrorException e) {
-            try {
-                String errorBody = e.getResponseBodyAsString();
-                if (errorBody.contains("\"message\"")) {
-                    int start = errorBody.indexOf("\"message\":\"") + 11;
-                    int end = errorBody.indexOf("\"", start);
-                    throw new RuntimeException(errorBody.substring(start, end));
-                }
-                throw new RuntimeException("Erro ao trocar status: " + errorBody);
-            } catch (Exception ex) {
-                throw new RuntimeException("Erro ao trocar status: " + e.getResponseBodyAsString());
+            String errorBody = e.getResponseBodyAsString();
+            if (errorBody != null && errorBody.contains("\"message\":\"")) {
+                int start = errorBody.indexOf("\"message\":\"") + 11;
+                int end = errorBody.indexOf("\"", start);
+                if (end > start) throw new RuntimeException(errorBody.substring(start, end));
             }
+            throw new RuntimeException("Erro ao trocar status: " + errorBody);
         }
     }
 
@@ -447,6 +473,14 @@ public class ApiService {
                 .toBodilessEntity();
     }
 
+    public void removerNotificacao(Long idNotificacao, String token) {
+        restClient.delete()
+                .uri("/notificacoes/{id}", idNotificacao)
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .toBodilessEntity();
+    }
+
     @SuppressWarnings("unchecked")
     public java.util.Map<String, Object> registrarAbastecimento(Long idMaquina, String dataAbastecimento, String litros, String tipoCombustivel, String hodometroAtual, String token) {
         var body = new java.util.HashMap<String, Object>();
@@ -465,17 +499,13 @@ public class ApiService {
                     .retrieve()
                     .body(java.util.Map.class);
         } catch (org.springframework.web.client.HttpClientErrorException e) {
-            try {
-                String errorBody = e.getResponseBodyAsString();
-                if (errorBody.contains("\"message\"")) {
-                    int start = errorBody.indexOf("\"message\":\"") + 11;
-                    int end = errorBody.indexOf("\"", start);
-                    throw new RuntimeException(errorBody.substring(start, end));
-                }
-                throw new RuntimeException("Erro ao registrar abastecimento: " + errorBody);
-            } catch (Exception ex) {
-                throw new RuntimeException("Erro ao registrar abastecimento: " + e.getResponseBodyAsString());
+            String errorBody = e.getResponseBodyAsString();
+            if (errorBody != null && errorBody.contains("\"message\":\"")) {
+                int start = errorBody.indexOf("\"message\":\"") + 11;
+                int end = errorBody.indexOf("\"", start);
+                if (end > start) throw new RuntimeException(errorBody.substring(start, end));
             }
+            throw new RuntimeException("Erro ao registrar abastecimento: " + errorBody);
         }
     }
 
@@ -492,17 +522,13 @@ public class ApiService {
                     .retrieve()
                     .body(java.util.Map.class);
         } catch (org.springframework.web.client.HttpClientErrorException e) {
-            try {
-                String errorBody = e.getResponseBodyAsString();
-                if (errorBody.contains("\"message\"")) {
-                    int start = errorBody.indexOf("\"message\":\"") + 11;
-                    int end = errorBody.indexOf("\"", start);
-                    throw new RuntimeException(errorBody.substring(start, end));
-                }
-                throw new RuntimeException("Erro ao autorizar risco: " + errorBody);
-            } catch (Exception ex) {
-                throw new RuntimeException("Erro ao autorizar risco: " + e.getResponseBodyAsString());
+            String errorBody = e.getResponseBodyAsString();
+            if (errorBody != null && errorBody.contains("\"message\":\"")) {
+                int start = errorBody.indexOf("\"message\":\"") + 11;
+                int end = errorBody.indexOf("\"", start);
+                if (end > start) throw new RuntimeException(errorBody.substring(start, end));
             }
+            throw new RuntimeException("Erro ao autorizar risco: " + errorBody);
         }
     }
 
@@ -577,6 +603,15 @@ public class ApiService {
         }
         return restClient.get()
                 .uri(url)
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(java.util.List.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.List<String> listarCombustiveisMaquina(Long idMaquina, String token) {
+        return restClient.get()
+                .uri("/proprietario/maquinas/{id}/combustiveis", idMaquina)
                 .header("Authorization", "Bearer " + token)
                 .retrieve()
                 .body(java.util.List.class);

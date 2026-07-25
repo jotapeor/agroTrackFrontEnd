@@ -67,6 +67,7 @@ public class MaquinaController {
                                @RequestParam("hodometro_inicial") String hodometroInicial,
                                @RequestParam(value = "capacidade_tanque", required = false) String capacidadeTanque,
                                @RequestParam(value = "tipo_combustivel", required = false) String tipoCombustivel,
+                               @RequestParam(value = "combustivel_extra", required = false) List<String> combustivelExtra,
                                @RequestParam(value = "intervalo_troca_oleo_horas", required = false) String intervaloTrocaOleo,
                                @RequestParam(value = "intervalo_inspecao_horas", required = false) String intervaloInspecao,
                                @RequestParam(value = "consumo_medio", required = false) String consumoMedio,
@@ -88,8 +89,9 @@ public class MaquinaController {
         try {
             apiService.atualizarMaquina(foto, id, nome, tipo, marca, modelo, ano,
                     numeroSerie, placa, hodometroInicial, capacidadeTanque, tipoCombustivel,
-                    intervaloTrocaOleo, intervaloInspecao, consumoMedio, idFazenda, idTalhao,
-                    status, nivelRisco, dataAquisicao, valorAquisicao, observacoes, token);
+                    combustivelExtra, intervaloTrocaOleo, intervaloInspecao, consumoMedio,
+                    idFazenda, idTalhao, status, nivelRisco, dataAquisicao, valorAquisicao,
+                    observacoes, token);
             redirectAttributes.addFlashAttribute("mensagemSucesso", "Máquina atualizada com sucesso!");
             return "redirect:/maquinas";
         } catch (HttpStatusCodeException ex) {
@@ -99,6 +101,38 @@ public class MaquinaController {
             redirectAttributes.addFlashAttribute("errorMessage", "Erro inesperado: " + ex.getMessage());
             return "redirect:/maquinas/editar/" + id;
         }
+    }
+
+    @GetMapping("/maquinas/arquivadas")
+    public String listarArquivadas(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
+        if (!isProprietario(session)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Acesso negado.");
+            return "redirect:/dashboard";
+        }
+        String token = (String) session.getAttribute("token");
+        try {
+            List<Map<String, Object>> maquinas = apiService.listarMaquinasArquivadas(token);
+            model.addAttribute("maquinas", maquinas != null ? maquinas : List.of());
+        } catch (Exception e) {
+            model.addAttribute("maquinas", List.of());
+        }
+        return "lista-maquinas-arquivadas";
+    }
+
+    @PostMapping("/maquinas/{id}/reativar")
+    public String reativar(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
+        if (!isProprietario(session)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Acesso negado.");
+            return "redirect:/dashboard";
+        }
+        String token = (String) session.getAttribute("token");
+        try {
+            apiService.reativarMaquina(id, token);
+            redirectAttributes.addFlashAttribute("mensagemSucesso", "Máquina reativada com sucesso!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Erro ao reativar máquina.");
+        }
+        return "redirect:/maquinas/arquivadas";
     }
 
     @PostMapping("/maquinas/excluir/{id}")
@@ -162,6 +196,7 @@ public class MaquinaController {
                             @RequestParam("hodometro_inicial") String hodometroInicial,
                             @RequestParam(value = "capacidade_tanque", required = false) String capacidadeTanque,
                             @RequestParam(value = "tipo_combustivel", required = false) String tipoCombustivel,
+                            @RequestParam(value = "combustivel_extra", required = false) List<String> combustivelExtra,
                             @RequestParam(value = "intervalo_troca_oleo_horas", required = false) String intervaloTrocaOleo,
                             @RequestParam(value = "intervalo_inspecao_horas", required = false) String intervaloInspecao,
                             @RequestParam(value = "consumo_medio", required = false) String consumoMedio,
@@ -181,8 +216,8 @@ public class MaquinaController {
         try {
             apiService.cadastrarMaquina(foto, nome, tipo, marca, modelo, ano,
                     numeroSerie, placa, hodometroInicial, capacidadeTanque, tipoCombustivel,
-                    intervaloTrocaOleo, intervaloInspecao, consumoMedio, idFazenda, idTalhao,
-                    dataAquisicao, valorAquisicao, observacoes, token);
+                    combustivelExtra, intervaloTrocaOleo, intervaloInspecao, consumoMedio,
+                    idFazenda, idTalhao, dataAquisicao, valorAquisicao, observacoes, token);
             redirectAttributes.addFlashAttribute("mensagemSucesso", "Máquina cadastrada com sucesso!");
             return "redirect:/dashboard";
         } catch (HttpStatusCodeException ex) {
@@ -191,6 +226,18 @@ public class MaquinaController {
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("errorMessage", "Erro inesperado: " + ex.getMessage());
             return "redirect:/nova-maquina";
+        }
+    }
+
+    @GetMapping("/api/maquinas/{id}/combustiveis")
+    @ResponseBody
+    public List<String> listarCombustiveis(@PathVariable Long id, HttpSession session) {
+        String token = (String) session.getAttribute("token");
+        if (token == null) return List.of();
+        try {
+            return apiService.listarCombustiveisMaquina(id, token);
+        } catch (Exception e) {
+            return List.of();
         }
     }
 

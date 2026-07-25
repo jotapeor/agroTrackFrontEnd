@@ -183,7 +183,7 @@
                     </div>
                 </div>
                 <div class="premium-header-actions" th:if="${maquina.status == 'Em Operacao'}">
-                    <a th:href="@{/telemetria(maquina=${maquina.id})}" class="btn btn-primary">
+                    <a th:href="@{/maquinas/{id}/telemetria(id=${maquina.id})}" class="btn btn-primary">
                         <i class="bi bi-activity"></i> Ver Telemetria
                     </a>
                 </div>

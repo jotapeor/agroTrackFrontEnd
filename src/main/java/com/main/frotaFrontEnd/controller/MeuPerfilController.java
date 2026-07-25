@@ -18,6 +18,24 @@ public class MeuPerfilController {
     @Autowired
     private ApiService apiService;
 
+    @GetMapping("/api/usuarios/email-disponivel")
+    @ResponseBody
+    public Map<String, Object> verificarEmailDisponivel(
+            @RequestParam("email") String email,
+            @RequestParam(value = "idAtual", required = false) Long idAtual,
+            HttpSession session) {
+        String token = (String) session.getAttribute("token");
+        if (token == null) {
+            return Map.of("disponivel", false);
+        }
+        try {
+            Map<String, Object> resultado = apiService.verificarEmailDisponivel(email, idAtual, token);
+            return resultado != null ? resultado : Map.of("disponivel", true);
+        } catch (Exception e) {
+            return Map.of("disponivel", true);
+        }
+    }
+
     @GetMapping("/meu-perfil")
     public String exibir(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
         if (session.getAttribute("token") == null) {

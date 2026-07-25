@@ -26,6 +26,26 @@
                 <i class="bi bi-exclamation-circle"></i> <span th:text="${errorMessage}">Erro.</span>
             </div>
 
+            <div id="banner-operacao-ativa" th:if="${dashboard.operacaoAtiva != null}"
+                 style="background: linear-gradient(135deg, #ecfdf5, #d1fae5); border: 1px solid #6ee7b7; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span style="width:12px; height:12px; border-radius:50%; background:#10b981; display:inline-block; box-shadow:0 0 0 3px rgba(16,185,129,0.3); animation: pulse 2s infinite;"></span>
+                    <div>
+                        <strong style="color:#065f46;">Você está operando:</strong>
+                        <span style="color:#047857; font-weight:600;" th:text="' ' + ${dashboard.operacaoAtiva.nomeMaquina}"></span>
+                        <span style="color:#6b7280; font-size:0.85rem;" th:text="' desde ' + ${#strings.substring(dashboard.operacaoAtiva.dataInicio, 11, 16)}"></span>
+                    </div>
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <a th:href="@{/maquinas/{id}/status(id=${dashboard.operacaoAtiva.idMaquina})}" class="btn btn-sm" style="background:#10b981; color:#fff; border:none;">
+                        <i class="bi bi-arrow-repeat"></i> Atualizar Status
+                    </a>
+                    <a th:href="@{/ordens/nova}" class="btn btn-sm btn-outline" style="border-color:#10b981; color:#065f46;">
+                        <i class="bi bi-wrench-adjustable"></i> Abrir Chamado
+                    </a>
+                </div>
+            </div>
+
             <div class="at-grid at-grid-4 fade-in delay-1" style="margin-bottom:24px;">
                 <div class="at-stat-card">
                     <div class="at-stat-icon"><i class="bi bi-truck"></i></div>
@@ -160,6 +180,20 @@
                                 `;
                             });
                         }
+                    }
+
+                    const banner = document.getElementById('banner-operacao-ativa');
+                    if (data.operacaoAtiva) {
+                        const hora = data.operacaoAtiva.dataInicio ? data.operacaoAtiva.dataInicio.substring(11, 16) : '--:--';
+                        if (!banner) {
+                            const newBanner = document.createElement('div');
+                            newBanner.id = 'banner-operacao-ativa';
+                            newBanner.style.cssText = 'background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1px solid #6ee7b7;border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;';
+                            newBanner.innerHTML = `<div style="display:flex;align-items:center;gap:12px;"><span style="width:12px;height:12px;border-radius:50%;background:#10b981;display:inline-block;box-shadow:0 0 0 3px rgba(16,185,129,0.3);"></span><div><strong style="color:#065f46;">Você está operando:</strong> <span style="color:#047857;font-weight:600;">${data.operacaoAtiva.nomeMaquina}</span> <span style="color:#6b7280;font-size:0.85rem;">desde ${hora}</span></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;"><a href="/maquinas/${data.operacaoAtiva.idMaquina}/status" class="btn btn-sm" style="background:#10b981;color:#fff;border:none;"><i class="bi bi-arrow-repeat"></i> Atualizar Status</a><a href="/ordens/nova" class="btn btn-sm btn-outline" style="border-color:#10b981;color:#065f46;"><i class="bi bi-wrench-adjustable"></i> Abrir Chamado</a></div>`;
+                            document.querySelector('.at-page-header').insertAdjacentElement('afterend', newBanner);
+                        }
+                    } else if (banner) {
+                        banner.remove();
                     }
                 })
                 .catch(e => console.error("Erro no polling da dashboard:", e));

@@ -63,7 +63,7 @@
                             <div class="at-form-group">
                                 <label class="at-form-label" for="ano">Ano <span class="required">*</span></label>
                                 <input type="number" id="ano" name="ano" class="at-form-control"
-                                       th:value="${maquina.ano}" required />
+                                       th:value="${maquina.ano}" min="1900" th:attr="max=${#dates.year(#dates.createNow()) + 1}" required />
                             </div>
                         </div>
                         <div class="at-grid at-grid-2">
@@ -126,14 +126,27 @@
                         </div>
                         <div class="at-grid at-grid-2">
                             <div class="at-form-group">
-                                <label class="at-form-label" for="tipo_combustivel">Combustível</label>
+                                <label class="at-form-label" for="tipo_combustivel">Combustível Principal</label>
                                 <select id="tipo_combustivel" name="tipo_combustivel" class="at-form-control at-form-select">
                                     <option value="">Selecione</option>
                                     <option value="Diesel S10" th:selected="${maquina.tipoCombustivel == 'Diesel S10'}">Diesel S10</option>
                                     <option value="Diesel S500" th:selected="${maquina.tipoCombustivel == 'Diesel S500'}">Diesel S500</option>
                                     <option value="Gasolina" th:selected="${maquina.tipoCombustivel == 'Gasolina'}">Gasolina</option>
                                     <option value="Etanol" th:selected="${maquina.tipoCombustivel == 'Etanol'}">Etanol</option>
+                                    <option value="Elétrico" th:selected="${maquina.tipoCombustivel == 'Elétrico'}">Elétrico</option>
                                 </select>
+                                <div style="margin-top:8px;">
+                                    <label style="font-size:0.85rem; cursor:pointer;">
+                                        <input type="checkbox" id="multiCombustivel" onchange="toggleMultiCombustivel(this.checked)" style="margin-right:4px;">
+                                        Aceita mais de um combustível
+                                    </label>
+                                </div>
+                                <div id="combustiveis-extras" style="display:none; margin-top:8px; padding:10px; background:#f8fafc; border-radius:6px; border:1px solid var(--at-border);">
+                                    <div id="lista-combustiveis-extras"></div>
+                                    <button type="button" class="btn btn-ghost btn-sm" onclick="adicionarCombustivel()" style="margin-top:6px;">
+                                        <i class="bi bi-plus-circle"></i> Adicionar combustível
+                                    </button>
+                                </div>
                             </div>
                             <div class="at-form-group">
                                 <label class="at-form-label" for="consumo_medio">Consumo (L/h)</label>
@@ -226,7 +239,43 @@
     </div>
 </div>
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
-<script>
+<script th:inline="javascript">
+const MAQUINA_ID_EDIT = [[${maquina.id}]];
+const COMBUSTIVEIS_OPCOES = ['Diesel S10', 'Diesel S500', 'Gasolina', 'Etanol', 'Elétrico'];
+
+function toggleMultiCombustivel(checked) {
+    const div = document.getElementById('combustiveis-extras');
+    div.style.display = checked ? 'block' : 'none';
+    if (!checked) {
+        document.getElementById('lista-combustiveis-extras').innerHTML = '';
+    }
+}
+
+function adicionarCombustivel(valorSelecionado) {
+    const lista = document.getElementById('lista-combustiveis-extras');
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex; gap:8px; align-items:center; margin-bottom:6px;';
+    const sel = document.createElement('select');
+    sel.name = 'combustivel_extra';
+    sel.className = 'at-form-control at-form-select';
+    sel.style.flex = '1';
+    COMBUSTIVEIS_OPCOES.forEach(function(c) {
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        if (valorSelecionado && c === valorSelecionado) opt.selected = true;
+        sel.appendChild(opt);
+    });
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn btn-ghost btn-sm';
+    btn.innerHTML = '<i class="bi bi-trash" style="color:var(--at-danger);"></i>';
+    btn.onclick = function() { lista.removeChild(div); };
+    div.appendChild(sel);
+    div.appendChild(btn);
+    lista.appendChild(div);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const fazendaSelect = document.getElementById('id_fazenda');
     const talhaoSelect = document.getElementById('id_talhao');
@@ -267,6 +316,19 @@ document.addEventListener('DOMContentLoaded', function() {
             carregarTalhoes(this.value, null);
         });
     }
+
+    fetch('/api/maquinas/' + MAQUINA_ID_EDIT + '/combustiveis')
+        .then(r => r.json())
+        .then(function(tipos) {
+            const primary = document.getElementById('tipo_combustivel').value;
+            const extras = (tipos || []).filter(function(t) { return t !== primary; });
+            if (extras.length > 0) {
+                document.getElementById('multiCombustivel').checked = true;
+                toggleMultiCombustivel(true);
+                extras.forEach(function(t) { adicionarCombustivel(t); });
+            }
+        })
+        .catch(function() {});
 });
 </script>
 </body>

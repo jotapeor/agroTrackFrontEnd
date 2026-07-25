@@ -30,6 +30,9 @@
                 <p class="at-page-subtitle">Acompanhe seus alertas e mensagens importantes.</p>
             </div>
 
+            <div th:if="${mensagemSucesso}" class="at-alert at-alert-success" role="alert">
+                <i class="bi bi-check-circle"></i> <span th:text="${mensagemSucesso}"></span>
+            </div>
             <div th:if="${errorMessage}" class="at-alert at-alert-danger" role="alert">
                 <i class="bi bi-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
             </div>
@@ -39,7 +42,7 @@
             </div>
 
             <div th:each="n, iterStat : ${notificacoes}" class="notif-card fade-in" th:classappend="${!n.lida} ? 'nao-lida' : ''" th:style="'animation-delay: ' + ${#numbers.formatDecimal(iterStat.index * 0.05, 1, 2, 'POINT')} + 's'">
-                <div class="notif-icon"
+                <div class="notif-icon bi"
                      th:classappend="${n.tipo == 'anomalia' ? 'anomalia bi-exclamation-triangle-fill' : (n.tipo == 'alerta_preventivo' ? 'alerta_preventivo bi-cone-striped' : 'ordem bi-info-circle-fill')}">
                 </div>
                 <div class="notif-content">
@@ -47,12 +50,23 @@
                     <div class="notif-date" th:text="${n.dataCriacao.replace('T', ' ').substring(0, 16)}">Data</div>
                     <div class="notif-message" th:text="${n.mensagem}">Mensagem</div>
                 </div>
-                <div th:if="${!n.lida}">
-                    <form th:action="@{/notificacoes/{id}/lida(id=${n.id})}" method="post">
-                        <button type="submit" class="btn btn-ghost btn-sm" title="Marcar como lida">
-                            <i class="bi bi-check-all" style="font-size: 1.2rem; color: var(--at-primary);"></i>
-                        </button>
-                    </form>
+                <div style="display:flex; flex-direction:column; gap:4px; align-items:center;">
+                    <button th:if="${n.idOrdem != null}" type="button" class="btn btn-ghost btn-sm"
+                            th:onclick="'abrirDetalheNotif(' + ${n.idOrdem} + ', \'' + ${n.descricaoOrdem} + '\', \'' + ${n.prioridadeOrdem} + '\', \'' + ${n.statusOrdem} + '\')'">
+                        <i class="bi bi-eye" style="font-size: 1.1rem; color: var(--at-primary);"></i>
+                    </button>
+                    <div th:if="${!n.lida}">
+                        <form th:action="@{/notificacoes/{id}/lida(id=${n.id})}" method="post">
+                            <button type="submit" class="btn btn-ghost btn-sm" title="Marcar como lida">
+                                <i class="bi bi-check-all" style="font-size: 1.2rem; color: var(--at-primary);"></i>
+                            </button>
+                        </form>
+                    </div>
+                    <button type="button" class="btn btn-ghost btn-sm"
+                            th:onclick="'confirmarRemoverNotificacao(' + ${n.id} + ')'"
+                            title="Remover notificação">
+                        <i class="bi bi-trash" style="font-size: 1.1rem; color: var(--at-danger);"></i>
+                    </button>
                 </div>
             </div>
         </main>
@@ -60,6 +74,65 @@
     </div>
 </div>
 
+<div id="detalheOrdemModal" class="confirm-modal-overlay" style="display:none;">
+    <div class="confirm-modal" style="max-width:480px;">
+        <div class="confirm-modal-icon" style="color:var(--at-primary);"><i class="bi bi-wrench-adjustable-circle"></i></div>
+        <div class="confirm-modal-title">Detalhes da Ordem</div>
+        <div style="text-align:left; padding: 0 8px;">
+            <p style="margin-bottom:8px;"><strong>Prioridade:</strong> <span id="detalhe-prioridade" class="at-badge"></span></p>
+            <p style="margin-bottom:8px;"><strong>Status:</strong> <span id="detalhe-status"></span></p>
+            <p style="margin-bottom:4px;"><strong>Descrição:</strong></p>
+            <p id="detalhe-descricao" style="background:#f8fafc; border-radius:6px; padding:10px; font-size:0.9rem; color:var(--at-text-secondary); white-space:pre-wrap; word-break:break-word;"></p>
+        </div>
+        <div class="confirm-modal-actions">
+            <button class="btn btn-ghost" onclick="fecharDetalheOrdem()">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<div id="confirmModalNotif" class="confirm-modal-overlay" style="display:none;">
+    <div class="confirm-modal">
+        <div class="confirm-modal-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <div class="confirm-modal-title">Remover Notificação</div>
+        <div class="confirm-modal-text">Tem certeza que deseja remover esta notificação permanentemente?</div>
+        <div class="confirm-modal-actions">
+            <button class="btn btn-ghost" onclick="fecharModalNotif()">Cancelar</button>
+            <form id="confirmRemoverNotifForm" method="post" style="display:inline;">
+                <button type="submit" class="btn btn-primary" style="background:var(--at-danger); border-color:var(--at-danger);">
+                    <i class="bi bi-trash"></i> Remover
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script>
+    function abrirDetalheNotif(idOrdem, descricao, prioridade, status) {
+        document.getElementById('detalhe-descricao').textContent = descricao || 'Sem descrição.';
+        const badge = document.getElementById('detalhe-prioridade');
+        badge.textContent = prioridade || '';
+        badge.className = 'at-badge ' + (prioridade === 'Critica' ? 'at-badge-danger' : prioridade === 'Alta' ? 'at-badge-warning' : 'at-badge-success');
+        document.getElementById('detalhe-status').textContent = status || '';
+        document.getElementById('detalheOrdemModal').style.display = 'flex';
+    }
+    function fecharDetalheOrdem() {
+        document.getElementById('detalheOrdemModal').style.display = 'none';
+    }
+    document.getElementById('detalheOrdemModal').addEventListener('click', function(e) {
+        if (e.target === this) fecharDetalheOrdem();
+    });
+
+    function confirmarRemoverNotificacao(id) {
+        document.getElementById('confirmRemoverNotifForm').action = '/notificacoes/' + id + '/remover';
+        document.getElementById('confirmModalNotif').style.display = 'flex';
+    }
+    function fecharModalNotif() {
+        document.getElementById('confirmModalNotif').style.display = 'none';
+    }
+    document.getElementById('confirmModalNotif').addEventListener('click', function(e) {
+        if (e.target === this) fecharModalNotif();
+    });
+</script>
 </body>
 </html>
