@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <title>AgroTrack — Operações</title>
+    <meta charset="UTF-8">
+    <meta name="description" content="AgroTrack — Visualização central de máquinas em operação.">
+    <link rel="icon" type="image/png" th:href="@{/icon.png}">
+    <th:block th:replace="~{fragments/layout :: head-content}"></th:block>
+    <style>
+        .op-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .op-card {
+            background: var(--at-surface);
+            border: 1px solid var(--at-border);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 10px 30px rgba(148, 163, 184, 0.08);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease;
+        }
+        .op-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 40px rgba(148, 163, 184, 0.12);
+        }
+        .op-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--at-border);
+            padding-bottom: 12px;
+        }
+        .op-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--at-text);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .op-status {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--at-success);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .op-body {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .op-info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+        }
+        .op-info-label {
+            color: var(--at-text-muted);
+            font-weight: 500;
+        }
+        .op-info-value {
+            color: var(--at-text);
+            font-weight: 600;
+        }
+        .op-footer {
+            margin-top: auto;
+            padding-top: 16px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px 20px;
+            background: var(--at-surface);
+            border: 1px dashed var(--at-border);
+            border-radius: 8px;
+            color: var(--at-text-muted);
+        }
+    </style>
+</head>
+<body>
+<div class="at-sidebar-overlay" id="sidebarOverlay"></div>
+<div class="at-wrapper">
+    <div th:replace="~{fragments/layout :: sidebar}"></div>
+    <div class="at-main">
+        <div th:replace="~{fragments/layout :: topbar('Operações')}"></div>
+        <main class="at-content" id="main-content">
+            <div class="at-page-header fade-in">
+                <h1 class="at-page-title">Operações em Andamento</h1>
+                <p class="at-page-subtitle">Acompanhe as máquinas que estão atualmente trabalhando no campo em tempo real.</p>
+            </div>
+
+            <div th:if="${errorMessage}" class="at-alert at-alert-danger" role="alert">
+                <i class="bi bi-exclamation-circle"></i> <span th:text="${errorMessage}">Erro.</span>
+            </div>
+
+            <div class="op-grid" id="operacoes-grid">
+                <div th:if="${#lists.isEmpty(operacoes)}" class="empty-state">
+                    <i class="bi bi-info-circle" style="font-size: 2rem; margin-bottom: 12px; display: block;"></i>
+                    <p>Nenhuma máquina em operação no momento.</p>
+                </div>
+
+                <div class="op-card fade-in" th:each="op, iterStat : ${operacoes}" th:style="'animation-delay: ' + ${#numbers.formatDecimal(iterStat.index * 0.05, 1, 2, 'POINT')} + 's'">
+                    <div class="op-header">
+                        <h3 class="op-title"><i class="bi bi-truck"></i> <span th:text="${op.nomeMaquina}">Máquina</span></h3>
+                        <span class="op-status"><i class="bi bi-activity"></i> Em Operação</span>
+                    </div>
+                    <div class="op-body">
+                        <div class="op-info-row">
+                            <span class="op-info-label">Operador</span>
+                            <span class="op-info-value" th:text="${op.operadorAtual ?: 'Não informado'}">-</span>
+                        </div>
+                        <div class="op-info-row">
+                            <span class="op-info-label">Velocidade</span>
+                            <span class="op-info-value" th:text="${op.velocidadeAtual != null ? op.velocidadeAtual + ' km/h' : '--'}">--</span>
+                        </div>
+                        <div class="op-info-row">
+                            <span class="op-info-label">Consumo</span>
+                            <span class="op-info-value" th:text="${op.consumoAtual != null ? op.consumoAtual + ' L/h' : '--'}">--</span>
+                        </div>
+                        <div class="op-info-row">
+                            <span class="op-info-label">Atualização</span>
+                            <span class="op-info-value op-time" th:attr="data-time=${op.dataAtualizacao}" th:text="${op.dataAtualizacao != null ? op.dataAtualizacao.toString().replace('T', ' ').replaceAll('\\..*', '') : '--'}">--</span>
+                        </div>
+                    </div>
+                    <div class="op-footer">
+                        <a th:href="@{/maquinas/{id}/telemetria(id=${op.idMaquina})}" class="btn btn-primary btn-sm">
+                            Ver detalhes <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <div th:replace="~{fragments/layout :: footer}"></div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script>
+    function formatDateTime(dateString) {
+        if (!dateString) return '--';
+        const date = new Date(dateString);
+        return date.toLocaleString('pt-BR');
+    }
+
+    function renderCards(data) {
+        const grid = document.getElementById('operacoes-grid');
+        if (!data || data.length === 0) {
+            grid.innerHTML = `
+                <div class="empty-state">
+                    <i class="bi bi-info-circle" style="font-size: 2rem; margin-bottom: 12px; display: block;"></i>
+                    <p>Nenhuma máquina em operação no momento.</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        data.forEach((op, index) => {
+            const vel = op.velocidadeAtual != null ? op.velocidadeAtual + ' km/h' : '--';
+            const cons = op.consumoAtual != null ? op.consumoAtual + ' L/h' : '--';
+            const opName = op.operadorAtual ? op.operadorAtual : 'Não informado';
+
+            html += `
+                <div class="op-card fade-in" style="animation-delay: ${(index * 0.05).toFixed(2)}s">
+                    <div class="op-header">
+                        <h3 class="op-title"><i class="bi bi-truck"></i> <span>${op.nomeMaquina}</span></h3>
+                        <span class="op-status"><i class="bi bi-activity"></i> Em Operação</span>
+                    </div>
+                    <div class="op-body">
+                        <div class="op-info-row">
+                            <span class="op-info-label">Operador</span>
+                            <span class="op-info-value">${opName}</span>
+                        </div>
+                        <div class="op-info-row">
+                            <span class="op-info-label">Velocidade</span>
+                            <span class="op-info-value">${vel}</span>
+                        </div>
+                        <div class="op-info-row">
+                            <span class="op-info-label">Consumo</span>
+                            <span class="op-info-value">${cons}</span>
+                        </div>
+                        <div class="op-info-row">
+                            <span class="op-info-label">Atualização</span>
+                            <span class="op-info-value">${formatDateTime(op.dataAtualizacao)}</span>
+                        </div>
+                    </div>
+                    <div class="op-footer">
+                        <a href="/maquinas/${op.idMaquina}/telemetria" class="btn btn-primary btn-sm">
+                            Ver detalhes <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            `;
+        });
+        grid.innerHTML = html;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        setInterval(function() {
+            fetch('/api/operacoes/data')
+                .then(r => { if(r.ok) return r.json(); throw new Error('Erro na requisição'); })
+                .then(data => {
+                    renderCards(data);
+                })
+                .catch(e => console.error("Erro no polling de operações:", e));
+        }, 10000);
+    });
+</script>
+</body>
+</html>

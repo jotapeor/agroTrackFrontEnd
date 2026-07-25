@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <title>AgroTrack — Notificações</title>
+    <meta charset="UTF-8">
+    <th:block th:replace="~{fragments/layout :: head-content}"></th:block>
+    <style>
+        .notif-card { background: var(--at-surface); border: 1px solid var(--at-border); border-radius: 16px; padding: 24px; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 16px; box-shadow: 0 10px 30px rgba(148, 163, 184, 0.08); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease; }
+        .notif-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(148, 163, 184, 0.12); }
+        .notif-card.nao-lida { border-left: 4px solid var(--at-primary); background: #f8fafc; }
+        .notif-icon { font-size: 1.5rem; }
+        .notif-icon.anomalia { color: var(--at-danger); }
+        .notif-icon.alerta_preventivo { color: var(--at-warning); }
+        .notif-icon.ordem { color: var(--at-info); }
+        .notif-content { flex: 1; }
+        .notif-title { font-weight: 600; margin-bottom: 4px; color: var(--at-text); }
+        .notif-date { font-size: 0.8rem; color: var(--at-text-muted); margin-bottom: 8px; }
+        .notif-message { font-size: 0.95rem; color: var(--at-text-secondary); }
+    </style>
+</head>
+<body>
+<div class="at-sidebar-overlay" id="sidebarOverlay"></div>
+<div class="at-wrapper">
+    <div th:replace="~{fragments/layout :: sidebar}"></div>
+    <div class="at-main">
+        <div th:replace="~{fragments/layout :: topbar('Notificações')}"></div>
+        <main class="at-content">
+            <div class="at-page-header fade-in">
+                <h1 class="at-page-title">Notificações</h1>
+                <p class="at-page-subtitle">Acompanhe seus alertas e mensagens importantes.</p>
+            </div>
+
+            <div th:if="${mensagemSucesso}" class="at-alert at-alert-success" role="alert">
+                <i class="bi bi-check-circle"></i> <span th:text="${mensagemSucesso}"></span>
+            </div>
+            <div th:if="${errorMessage}" class="at-alert at-alert-danger" role="alert">
+                <i class="bi bi-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
+            </div>
+
+            <div th:if="${#lists.isEmpty(notificacoes)}" style="text-align: center; padding: 40px; color: var(--at-text-muted);">
+                Você não possui nenhuma notificação.
+            </div>
+
+            <div th:each="n, iterStat : ${notificacoes}" class="notif-card fade-in" th:classappend="${!n.lida} ? 'nao-lida' : ''" th:style="'animation-delay: ' + ${#numbers.formatDecimal(iterStat.index * 0.05, 1, 2, 'POINT')} + 's'">
+                <div class="notif-icon bi"
+                     th:classappend="${n.tipo == 'anomalia' ? 'anomalia bi-exclamation-triangle-fill' : (n.tipo == 'alerta_preventivo' ? 'alerta_preventivo bi-cone-striped' : 'ordem bi-info-circle-fill')}">
+                </div>
+                <div class="notif-content">
+                    <div class="notif-title" th:text="${n.tipo.toUpperCase().replace('_', ' ')}">TIPO</div>
+                    <div class="notif-date" th:text="${n.dataCriacao.replace('T', ' ').substring(0, 16)}">Data</div>
+                    <div class="notif-message" th:text="${n.mensagem}">Mensagem</div>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:4px; align-items:center;">
+                    <button th:if="${n.idOrdem != null}" type="button" class="btn btn-ghost btn-sm"
+                            th:onclick="'abrirDetalheNotif(' + ${n.idOrdem} + ', \'' + ${n.descricaoOrdem} + '\', \'' + ${n.prioridadeOrdem} + '\', \'' + ${n.statusOrdem} + '\')'">
+                        <i class="bi bi-eye" style="font-size: 1.1rem; color: var(--at-primary);"></i>
+                    </button>
+                    <div th:if="${!n.lida}">
+                        <form th:action="@{/notificacoes/{id}/lida(id=${n.id})}" method="post">
+                            <button type="submit" class="btn btn-ghost btn-sm" title="Marcar como lida">
+                                <i class="bi bi-check-all" style="font-size: 1.2rem; color: var(--at-primary);"></i>
+                            </button>
+                        </form>
+                    </div>
+                    <button type="button" class="btn btn-ghost btn-sm"
+                            th:onclick="'confirmarRemoverNotificacao(' + ${n.id} + ')'"
+                            title="Remover notificação">
+                        <i class="bi bi-trash" style="font-size: 1.1rem; color: var(--at-danger);"></i>
+                    </button>
+                </div>
+            </div>
+        </main>
+        <div th:replace="~{fragments/layout :: footer}"></div>
+    </div>
+</div>
+
+<div id="detalheOrdemModal" class="confirm-modal-overlay" style="display:none;">
+    <div class="confirm-modal" style="max-width:480px;">
+        <div class="confirm-modal-icon" style="color:var(--at-primary);"><i class="bi bi-wrench-adjustable-circle"></i></div>
+        <div class="confirm-modal-title">Detalhes da Ordem</div>
+        <div style="text-align:left; padding: 0 8px;">
+            <p style="margin-bottom:8px;"><strong>Prioridade:</strong> <span id="detalhe-prioridade" class="at-badge"></span></p>
+            <p style="margin-bottom:8px;"><strong>Status:</strong> <span id="detalhe-status"></span></p>
+            <p style="margin-bottom:4px;"><strong>Descrição:</strong></p>
+            <p id="detalhe-descricao" style="background:#f8fafc; border-radius:6px; padding:10px; font-size:0.9rem; color:var(--at-text-secondary); white-space:pre-wrap; word-break:break-word;"></p>
+        </div>
+        <div class="confirm-modal-actions">
+            <button class="btn btn-ghost" onclick="fecharDetalheOrdem()">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<div id="confirmModalNotif" class="confirm-modal-overlay" style="display:none;">
+    <div class="confirm-modal">
+        <div class="confirm-modal-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <div class="confirm-modal-title">Remover Notificação</div>
+        <div class="confirm-modal-text">Tem certeza que deseja remover esta notificação permanentemente?</div>
+        <div class="confirm-modal-actions">
+            <button class="btn btn-ghost" onclick="fecharModalNotif()">Cancelar</button>
+            <form id="confirmRemoverNotifForm" method="post" style="display:inline;">
+                <button type="submit" class="btn btn-primary" style="background:var(--at-danger); border-color:var(--at-danger);">
+                    <i class="bi bi-trash"></i> Remover
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script>
+    function abrirDetalheNotif(idOrdem, descricao, prioridade, status) {
+        document.getElementById('detalhe-descricao').textContent = descricao || 'Sem descrição.';
+        const badge = document.getElementById('detalhe-prioridade');
+        badge.textContent = prioridade || '';
+        badge.className = 'at-badge ' + (prioridade === 'Critica' ? 'at-badge-danger' : prioridade === 'Alta' ? 'at-badge-warning' : 'at-badge-success');
+        document.getElementById('detalhe-status').textContent = status || '';
+        document.getElementById('detalheOrdemModal').style.display = 'flex';
+    }
+    function fecharDetalheOrdem() {
+        document.getElementById('detalheOrdemModal').style.display = 'none';
+    }
+    document.getElementById('detalheOrdemModal').addEventListener('click', function(e) {
+        if (e.target === this) fecharDetalheOrdem();
+    });
+
+    function confirmarRemoverNotificacao(id) {
+        document.getElementById('confirmRemoverNotifForm').action = '/notificacoes/' + id + '/remover';
+        document.getElementById('confirmModalNotif').style.display = 'flex';
+    }
+    function fecharModalNotif() {
+        document.getElementById('confirmModalNotif').style.display = 'none';
+    }
+    document.getElementById('confirmModalNotif').addEventListener('click', function(e) {
+        if (e.target === this) fecharModalNotif();
+    });
+</script>
+</body>
+</html>

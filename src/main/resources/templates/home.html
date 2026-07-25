@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroTrack — Gestão Agrícola</title>
+    <meta name="description" content="AgroTrack — Sistema de gestão de máquinas, manutenções e operações para sua propriedade rural.">
+    <link rel="icon" type="image/png" th:href="@{/icon.png}">
+    <th:block th:replace="~{fragments/layout :: head-content}"></th:block>
+</head>
+<body style="background-color: #0a1710; color: #fff; overflow-x: hidden;">
+
+<nav class="navbar-home">
+    <a href="#" class="navbar-logo">Agro<span>Track</span></a>
+    <div class="nav-links">
+        <a href="#solucoes" class="nav-link">Soluções</a>
+        <a href="#sobre" class="nav-link">Sobre</a>
+        <a href="#contato" class="nav-link">Contato</a>
+        <a th:href="@{/login}" class="nav-btn"><i class="bi bi-box-arrow-in-right"></i> Entrar</a>
+    </div>
+</nav>
+
+<div class="home-page">
+    <section class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">O Futuro da sua <span>Propriedade Rural</span> começa aqui</h1>
+            <p class="hero-tagline">
+                Nós transformamos a complexidade da gestão do campo em processos simples, inteligentes e altamente eficientes. Tenha o controle total da sua frota na palma da mão.
+            </p>
+            <div class="hero-buttons">
+                <a th:href="@{/login}" class="nav-btn" style="padding: 14px 32px; font-size: 1rem;">
+                    Acessar Sistema
+                </a>
+                <a href="#contato" class="btn-hire">
+                    Entre em contato para contratar
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section id="solucoes" class="section-details">
+        <div class="details-container">
+            <h2 class="section-title">O que o sistema <span>entrega</span></h2>
+            <div class="features-grid">
+                <div class="feature-box">
+                    <div class="fb-icon"><i class="bi bi-truck"></i></div>
+                    <div class="fb-title">Gestão de Máquinas</div>
+                    <div class="fb-desc">Cadastre, acompanhe e monitore toda a sua frota. Saiba onde e como seus equipamentos estão sendo utilizados para otimizar operações.</div>
+                </div>
+                <div class="feature-box">
+                    <div class="fb-icon"><i class="bi bi-tools"></i></div>
+                    <div class="fb-title">Controle de Manutenções</div>
+                    <div class="fb-desc">Previna falhas inesperadas. Crie ordens de serviço, gerencie manutenções preventivas e corretivas e reduza o tempo de máquina parada.</div>
+                </div>
+                <div class="feature-box">
+                    <div class="fb-icon"><i class="bi bi-fuel-pump"></i></div>
+                    <div class="fb-title">Monitoramento de Consumo</div>
+                    <div class="fb-desc">Registre todos os abastecimentos e tenha relatórios precisos sobre o consumo de combustível, reduzindo custos operacionais significativamente.</div>
+                </div>
+                <div class="feature-box">
+                    <div class="fb-icon"><i class="bi bi-people"></i></div>
+                    <div class="fb-title">Gestão de Equipes</div>
+                    <div class="fb-desc">Controle o acesso de operadores, mecânicos e gestores. Defina funções e monitore a produtividade de cada colaborador em campo.</div>
+                </div>
+                <div class="feature-box">
+                    <div class="fb-icon"><i class="bi bi-bell"></i></div>
+                    <div class="fb-title">Notificações Inteligentes</div>
+                    <div class="fb-desc">Receba alertas em tempo real sobre manutenções atrasadas, baixo nível de estoque e ocorrências urgentes registradas pelos operadores.</div>
+                </div>
+                <div class="feature-box">
+                    <div class="fb-icon"><i class="bi bi-graph-up-arrow"></i></div>
+                    <div class="fb-title">Dashboard e Relatórios</div>
+                    <div class="fb-desc">Tome decisões baseadas em dados. Visualize indicadores chave de desempenho em um painel intuitivo e gere relatórios completos.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="sobre" class="section-info">
+        <div class="info-content">
+            <h2 class="info-title">Por que escolher o AgroTrack?</h2>
+            <p class="info-text">
+                Desenvolvido por quem entende os desafios do agronegócio, o AgroTrack nasceu com a missão de trazer tecnologia de ponta para o dia a dia do produtor rural. Nossa plataforma é robusta, segura e adaptável a propriedades de diferentes tamanhos, garantindo que você tenha o melhor retorno sobre o investimento da sua frota.
+            </p>
+            <div id="contato" style="margin-top: 50px;">
+                <h3 style="color: #4ade80; margin-bottom: 20px; font-size: 1.8rem;">Pronto para transformar sua gestão?</h3>
+                <a href="mailto:contato@agrotrack.com.br" class="btn-hire" onclick="alert('Isto simularia o redirecionamento para o WhatsApp ou e-mail da equipe comercial!')">
+                    Entre em contato para contratar nossos serviços
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="home-footer">
+        <p>&copy; 2026 <strong>AgroTrack</strong>. O sistema definitivo para gestão de frotas agrícolas.</p>
+        <p>Desenvolvido para revolucionar o campo.</p>
+    </footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
