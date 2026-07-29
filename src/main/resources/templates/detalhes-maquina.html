@@ -182,9 +182,12 @@
                         Status Atual: <span th:text="${maquina.status}" style="font-weight: 600;">Status</span>
                     </div>
                 </div>
-                <div class="premium-header-actions" th:if="${maquina.status == 'Em Operacao'}">
-                    <a th:href="@{/maquinas/{id}/telemetria(id=${maquina.id})}" class="btn btn-primary">
+                <div class="premium-header-actions" style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <a th:if="${maquina.status == 'Em Operacao'}" th:href="@{/maquinas/{id}/telemetria(id=${maquina.id})}" class="btn btn-primary">
                         <i class="bi bi-activity"></i> Ver Telemetria
+                    </a>
+                    <a th:href="@{/maquinas/{id}/historico-operacoes(id=${maquina.id})}" class="btn btn-outline">
+                        <i class="bi bi-journal-text"></i> Histórico de Operações
                     </a>
                 </div>
             </div>

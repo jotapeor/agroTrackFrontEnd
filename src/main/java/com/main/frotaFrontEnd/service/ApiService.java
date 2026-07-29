@@ -348,7 +348,7 @@ public class ApiService {
     }
 
     @SuppressWarnings("unchecked")
-    public java.util.Map<String, Object> trocarStatusMaquina(Long idMaquina, String novoStatus, boolean confirmacao, String pesoCarregado, String hodometroFim, String observacoes, String token) {
+    public java.util.Map<String, Object> trocarStatusMaquina(Long idMaquina, String novoStatus, boolean confirmacao, String pesoCarregado, String hodometroFim, String observacoes, String motivo, String pesoFinal, String token) {
         var body = new java.util.HashMap<String, Object>();
         body.put("novoStatus", novoStatus);
         body.put("confirmacao", confirmacao);
@@ -358,7 +358,15 @@ public class ApiService {
         if (hodometroFim != null && !hodometroFim.isEmpty()) {
             body.put("hodometroFim", new java.math.BigDecimal(hodometroFim));
         }
-        body.put("observacoes", observacoes != null ? observacoes : "");
+        if (observacoes != null && !observacoes.isEmpty()) {
+            body.put("observacoes", observacoes);
+        }
+        if (motivo != null && !motivo.isEmpty()) {
+            body.put("motivo", motivo);
+        }
+        if (pesoFinal != null && !pesoFinal.isEmpty()) {
+            body.put("pesoFinal", new java.math.BigDecimal(pesoFinal));
+        }
 
         try {
             return restClient.post()
@@ -376,6 +384,15 @@ public class ApiService {
             }
             throw new RuntimeException("Erro ao trocar status: " + errorBody);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.Map<String, Object> obterOperacaoAtiva(Long idMaquina, String token) {
+        return restClient.get()
+                .uri("/operacoes/maquina/{id}/operacao-ativa", idMaquina)
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(java.util.Map.class);
     }
 
     @SuppressWarnings("unchecked")

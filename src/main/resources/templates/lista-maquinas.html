@@ -86,7 +86,10 @@
                                 <a th:href="@{/maquinas/editar/{id}(id=${m.id})}" class="btn btn-outline btn-sm">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <button type="button" class="btn btn-outline btn-sm" style="color:var(--at-danger);" th:data-id="${m.id}" th:data-nome="${m.nome}" onclick="confirmarExclusao(this)" title="Arquivar Máquina">
+                                <button th:if="${m.status != 'Em Operacao'}" type="button" class="btn btn-outline btn-sm" style="color:var(--at-danger);" th:data-id="${m.id}" th:data-nome="${m.nome}" onclick="confirmarExclusao(this)" title="Arquivar Máquina">
+                                    <i class="bi bi-archive"></i>
+                                </button>
+                                <button th:if="${m.status == 'Em Operacao'}" type="button" class="btn btn-outline btn-sm" disabled title="Encerre a operação antes de arquivar" style="opacity:0.45; cursor:not-allowed;">
                                     <i class="bi bi-archive"></i>
                                 </button>
                             </th:block>

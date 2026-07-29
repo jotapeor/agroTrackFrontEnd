@@ -279,6 +279,8 @@ public class MaquinaController {
                                @RequestParam(value = "pesoCarregado", required = false) String pesoCarregado,
                                @RequestParam(value = "hodometroFim", required = false) String hodometroFim,
                                @RequestParam(value = "observacoes", required = false) String observacoes,
+                               @RequestParam(value = "motivo", required = false) String motivo,
+                               @RequestParam(value = "pesoFinal", required = false) String pesoFinal,
                                HttpSession session,
                                RedirectAttributes redirectAttributes) {
         String token = (String) session.getAttribute("token");
@@ -287,7 +289,7 @@ public class MaquinaController {
             return "redirect:/login";
         }
         try {
-            Map<String, Object> resumo = apiService.trocarStatusMaquina(id, novoStatus, confirmacao, pesoCarregado, hodometroFim, observacoes, token);
+            Map<String, Object> resumo = apiService.trocarStatusMaquina(id, novoStatus, confirmacao, pesoCarregado, hodometroFim, observacoes, motivo, pesoFinal, token);
             redirectAttributes.addFlashAttribute("mensagemSucesso", "Status atualizado com sucesso!");
             if (resumo != null && !resumo.isEmpty()) {
                 redirectAttributes.addFlashAttribute("resumoOperacao", resumo);
@@ -301,6 +303,29 @@ public class MaquinaController {
             redirectAttributes.addFlashAttribute("errorMessage", "Erro inesperado: " + ex.getMessage());
             return "redirect:/maquinas/" + id + "/status";
         }
+    }
+
+    @GetMapping("/maquinas/{id}/historico-operacoes")
+    public String historicoOperacoes(@PathVariable Long id, HttpSession session, Model model, RedirectAttributes redirectAttributes) {
+        String token = (String) session.getAttribute("token");
+        if (token == null) return "redirect:/login";
+        try {
+            Map<String, Object> maquina = apiService.buscarMaquina(id, token);
+            model.addAttribute("maquina", maquina);
+            List<Map<String, Object>> historico = apiService.listarHistoricoMaquina(id, token);
+            List<Map<String, Object>> operacoes = historico.stream()
+                .filter(h -> "Operacao".equals(h.get("tipo")))
+                .collect(java.util.stream.Collectors.toList());
+            model.addAttribute("operacoes", operacoes);
+            List<Map<String, Object>> mudancas = historico.stream()
+                .filter(h -> "MudancaStatus".equals(h.get("tipo")))
+                .collect(java.util.stream.Collectors.toList());
+            model.addAttribute("mudancasStatus", mudancas);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Erro ao carregar histórico.");
+            return "redirect:/maquinas";
+        }
+        return "historico-operacoes";
     }
 
     @PostMapping("/maquinas/{id}/autorizar-risco")
@@ -340,6 +365,18 @@ public class MaquinaController {
             return "redirect:/maquinas";
         }
         return "telemetria";
+    }
+
+    @GetMapping("/api/maquinas/{id}/operacao-ativa")
+    @ResponseBody
+    public Map<String, Object> obterOperacaoAtivaFrontend(@PathVariable Long id, HttpSession session) {
+        String token = (String) session.getAttribute("token");
+        if (token == null) return Map.of("error", "Não autenticado");
+        try {
+            return apiService.obterOperacaoAtiva(id, token);
+        } catch (Exception e) {
+            return Map.of("error", e.getMessage());
+        }
     }
 
     @GetMapping("/api/maquinas/{id}/telemetria/dados")

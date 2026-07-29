@@ -52,7 +52,8 @@
                 </div>
                 <div style="display:flex; flex-direction:column; gap:4px; align-items:center;">
                     <button th:if="${n.idOrdem != null}" type="button" class="btn btn-ghost btn-sm"
-                            th:onclick="'abrirDetalheNotif(' + ${n.idOrdem} + ', \'' + ${n.descricaoOrdem} + '\', \'' + ${n.prioridadeOrdem} + '\', \'' + ${n.statusOrdem} + '\')'">
+                            th:attr="data-descricao=${n.descricaoOrdem},data-prioridade=${n.prioridadeOrdem},data-status=${n.statusOrdem}"
+                            onclick="abrirDetalheNotif(this)">
                         <i class="bi bi-eye" style="font-size: 1.1rem; color: var(--at-primary);"></i>
                     </button>
                     <div th:if="${!n.lida}">
@@ -108,7 +109,10 @@
 
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
 <script>
-    function abrirDetalheNotif(idOrdem, descricao, prioridade, status) {
+    function abrirDetalheNotif(el) {
+        const descricao = el.dataset.descricao;
+        const prioridade = el.dataset.prioridade;
+        const status = el.dataset.status;
         document.getElementById('detalhe-descricao').textContent = descricao || 'Sem descrição.';
         const badge = document.getElementById('detalhe-prioridade');
         badge.textContent = prioridade || '';
