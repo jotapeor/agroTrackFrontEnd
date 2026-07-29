@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <title>AgroTrack — Histórico de Operações</title>
+    <meta charset="UTF-8">
+    <meta name="description" content="AgroTrack — Histórico de operações da máquina.">
+    <link rel="icon" type="image/png" th:href="@{/icon.png}">
+    <th:block th:replace="~{fragments/layout :: head-content}"></th:block>
+    <style>
+        .hist-table-wrap { overflow-x: auto; }
+        .at-table th, .at-table td { white-space: nowrap; }
+        .status-card-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    </style>
+</head>
+<body>
+<div class="at-sidebar-overlay" id="sidebarOverlay"></div>
+<div class="at-wrapper">
+    <div th:replace="~{fragments/layout :: sidebar}"></div>
+    <div class="at-main">
+        <div th:replace="~{fragments/layout :: topbar('Histórico de Operações')}"></div>
+        <main class="at-content" id="main-content">
+
+            <div class="at-card fade-in" style="margin-bottom: 20px;">
+                <div class="at-card-body status-card-header">
+                    <div>
+                        <h2 class="at-page-title" th:text="'Histórico: ' + ${maquina.nome}">Histórico</h2>
+                        <p class="at-page-subtitle">
+                            <span th:text="${maquina.tipo}">Tipo</span> ·
+                            <span th:text="${maquina.modelo}">Modelo</span> ·
+                            Status atual: <strong th:text="${maquina.status}">Status</strong>
+                        </p>
+                    </div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <a th:href="@{/maquinas/{id}/status(id=${maquina.id})}" class="btn btn-outline">
+                            <i class="bi bi-arrow-left"></i> Voltar
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="at-card fade-in delay-1" style="margin-bottom: 20px;">
+                <div class="at-card-header">
+                    <h3 class="at-card-title"><i class="bi bi-journal-play"></i> Operações Concluídas</h3>
+                </div>
+                <div class="at-card-body" style="padding: 0;">
+                    <div th:if="${#lists.isEmpty(operacoes)}" style="padding: 32px; text-align: center; color: var(--at-text-muted);">
+                        <i class="bi bi-inbox" style="font-size: 2rem; display:block; margin-bottom: 8px;"></i>
+                        Nenhuma operação registrada para esta máquina.
+                    </div>
+                    <div th:unless="${#lists.isEmpty(operacoes)}" class="hist-table-wrap">
+                        <table class="at-table" style="width:100%; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th>Início</th>
+                                    <th>Fim</th>
+                                    <th>Operador</th>
+                                    <th>Horas Op.</th>
+                                    <th>Km/h Rodados</th>
+                                    <th>Peso Carregado</th>
+                                    <th>Peso Colhido</th>
+                                    <th>Observações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="op : ${operacoes}" th:if="${op.dataFim != null}">
+                                    <td th:text="${op.dataInicio != null ? op.dataInicio.replace('T',' ').substring(0,16) : '—'}">—</td>
+                                    <td th:text="${op.dataFim != null ? op.dataFim.replace('T',' ').substring(0,16) : 'Em andamento'}">—</td>
+                                    <td th:text="${op.nomeOperador}">—</td>
+                                    <td th:text="${op.horasOperadas != null ? op.horasOperadas + ' h' : '—'}">—</td>
+                                    <td th:text="${op.kmRodados != null ? op.kmRodados + ' h' : '—'}">—</td>
+                                    <td th:text="${op.pesoCarregado != null ? op.pesoCarregado : '—'}">—</td>
+                                    <td th:text="${op.pesoFinal != null ? op.pesoFinal + ' kg' : '—'}">—</td>
+                                    <td th:text="${op.observacoes != null ? op.observacoes : '—'}" style="max-width:200px; white-space:normal;">—</td>
+                                </tr>
+                                <tr th:each="op : ${operacoes}" th:if="${op.dataFim == null}">
+                                    <td th:text="${op.dataInicio != null ? op.dataInicio.replace('T',' ').substring(0,16) : '—'}">—</td>
+                                    <td><span class="at-badge at-badge-info">Em andamento</span></td>
+                                    <td th:text="${op.nomeOperador}">—</td>
+                                    <td>—</td>
+                                    <td>—</td>
+                                    <td th:text="${op.pesoCarregado != null ? op.pesoCarregado : '—'}">—</td>
+                                    <td>—</td>
+                                    <td>—</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="at-card fade-in delay-2">
+                <div class="at-card-header">
+                    <h3 class="at-card-title"><i class="bi bi-arrow-repeat"></i> Mudanças de Status (Inativação / Manutenção)</h3>
+                </div>
+                <div class="at-card-body" style="padding: 0;">
+                    <div th:if="${#lists.isEmpty(mudancasStatus)}" style="padding: 32px; text-align: center; color: var(--at-text-muted);">
+                        <i class="bi bi-info-circle" style="font-size: 2rem; display:block; margin-bottom: 8px;"></i>
+                        Nenhuma mudança de status registrada.
+                    </div>
+                    <div th:unless="${#lists.isEmpty(mudancasStatus)}" class="hist-table-wrap">
+                        <table class="at-table" style="width:100%; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Usuário</th>
+                                    <th>De</th>
+                                    <th>Para</th>
+                                    <th>Motivo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="m : ${mudancasStatus}">
+                                    <td th:text="${m.dataAlteracao != null ? m.dataAlteracao.replace('T',' ').substring(0,16) : '—'}">—</td>
+                                    <td th:text="${m.nomeUsuario}">—</td>
+                                    <td><span class="at-badge at-badge-neutral" th:text="${m.statusAnterior}">—</span></td>
+                                    <td><span class="at-badge" th:classappend="${m.novoStatus == 'Inativa' ? 'at-badge-warning' : 'at-badge-danger'}" th:text="${m.novoStatus}">—</span></td>
+                                    <td th:text="${m.motivo}" style="max-width:250px; white-space:normal;">—</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+        <div th:replace="~{fragments/layout :: footer}"></div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

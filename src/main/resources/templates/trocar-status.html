@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
 <head>
-    <title>AgroTrack — Trocar Status e Operação</title>
+    <title>AgroTrack — Operação da Máquina</title>
     <meta charset="UTF-8">
     <meta name="description" content="AgroTrack — Operação da máquina.">
     <link rel="icon" type="image/png" th:href="@{/icon.png}">
@@ -15,6 +15,17 @@
         .history-info { font-size: 0.95rem; color: var(--at-text); }
         .history-info strong { color: var(--at-text-emphasis); }
         .history-stats { text-align: right; font-size: 0.85rem; color: var(--at-text-secondary); }
+        .info-panel { background: #f8fafc; border: 1px solid var(--at-border); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+        .info-panel-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--at-border); font-size: 0.9rem; }
+        .info-panel-row:last-child { border-bottom: none; }
+        .info-panel-row span:first-child { color: var(--at-text-secondary); }
+        .info-panel-row span:last-child { font-weight: 600; color: var(--at-text); }
+        .scenario-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .scenario-tab { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--at-border); cursor: pointer; font-size: 0.9rem; background: var(--at-surface); color: var(--at-text-secondary); transition: all 0.2s; }
+        .scenario-tab.active { background: var(--at-primary); color: #fff; border-color: var(--at-primary); }
+        .scenario-panel { display: none; }
+        .scenario-panel.active { display: block; }
+        #op-ativa-loading { color: var(--at-text-muted); font-size: 0.9rem; padding: 8px 0; }
     </style>
 </head>
 <body>
@@ -48,12 +59,12 @@
                     <p><strong>Horas Operadas:</strong> <span th:text="${resumoOperacao.horasOperadas} + ' h'"></span></p>
                     <p><strong>Km Rodados:</strong> <span th:text="${resumoOperacao.kmRodados}"></span></p>
                     <p><strong>Peso Carregado:</strong> <span th:text="${resumoOperacao.pesoCarregado != null ? resumoOperacao.pesoCarregado : 'N/A'}"></span></p>
-                    <p><strong>Observações:</strong> <span th:text="${resumoOperacao.observacoes}"></span></p>
+                    <p th:if="${resumoOperacao.pesoFinal != null}"><strong>Peso Colhido:</strong> <span th:text="${resumoOperacao.pesoFinal} + ' kg'"></span></p>
+                    <p><strong>Observações:</strong> <span th:text="${resumoOperacao.observacoes != null ? resumoOperacao.observacoes : '—'}"></span></p>
                     <hr style="margin: 12px 0; border: none; border-top: 1px solid var(--at-border);">
-                    <p><strong>Consumo Estimado na Operação:</strong> <span th:text="${resumoOperacao.consumoEstimadoOperacao != null ? resumoOperacao.consumoEstimadoOperacao + ' L/km (ou un)' : 'Sem dados suficientes'}"></span></p>
-
+                    <p><strong>Combustível Abastecido na Operação:</strong> <span th:text="${resumoOperacao.consumoEstimadoOperacao != null ? resumoOperacao.consumoEstimadoOperacao + ' L' : 'Sem dados'}"></span></p>
                     <div th:if="${resumoOperacao.alertasGerados != null and !#lists.isEmpty(resumoOperacao.alertasGerados)}" style="margin-top: 16px;">
-                        <h4 style="margin-bottom: 8px; color: var(--at-danger);"><i class="bi bi-exclamation-triangle"></i> Alertas Gerados Durante a Operação</h4>
+                        <h4 style="margin-bottom: 8px; color: var(--at-danger);"><i class="bi bi-exclamation-triangle"></i> Alertas Gerados</h4>
                         <ul style="list-style: none; padding-left: 0;">
                             <li th:each="alerta : ${resumoOperacao.alertasGerados}" style="background: #fff3cd; color: #856404; padding: 8px; border-radius: 4px; margin-bottom: 4px; border: 1px solid #ffeeba;">
                                 <strong th:text="${alerta.tipo}"></strong>: <span th:text="${alerta.mensagem}"></span>
@@ -94,60 +105,194 @@
             </div>
 
             <div class="at-grid at-grid-2 fade-in delay-2">
-                <div class="at-card">
-                    <div class="at-card-header">
-                        <h2 class="at-card-title">Atualizar Status</h2>
-                    </div>
-                    <div class="at-card-body">
-                        <form id="form-trocar-status" th:action="@{/maquinas/{id}/status(id=${maquina.id})}" method="post">
-                            <div class="at-form-group">
-                                <label class="at-form-label" for="novoStatus">Novo Status</label>
-                                <select id="novoStatus" name="novoStatus" class="at-form-control at-form-select" required onchange="toggleCampos(this.value, '[[${maquina.status}]]', '[[${maquina.tipo}]]')">
-                                    <option value="">Selecione o novo status...</option>
-                                    <option value="Disponivel" th:disabled="${maquina.status == 'Disponivel'}">Disponível</option>
-                                    <option value="Em Operacao" th:disabled="${maquina.status == 'Em Operacao' || (maquina.nivelRisco == 'Alto' && !maquina.autorizadaOperacaoRisco)}">Em Operação</option>
-                                    <option value="Em Manutencao" th:disabled="${maquina.status == 'Em Manutencao'}">Em Manutenção</option>
-                                    <option value="Inativa" th:disabled="${maquina.status == 'Inativa'}">Inativa</option>
-                                </select>
+
+                <div>
+
+                    <div th:if="${maquina.status == 'Em Operacao'}" class="at-card">
+                        <div class="at-card-header" style="background: #fee2e2;">
+                            <h2 class="at-card-title" style="color: var(--at-danger);"><i class="bi bi-stop-circle"></i> Encerrar Operação</h2>
+                        </div>
+                        <div class="at-card-body">
+                            <div id="op-ativa-loading">
+                                <i class="bi bi-hourglass-split"></i> Carregando dados da operação...
+                            </div>
+                            <div id="op-ativa-painel" class="info-panel" style="display:none;">
+                                <div class="info-panel-row">
+                                    <span>Operador responsável</span>
+                                    <span id="oa-operador">—</span>
+                                </div>
+                                <div class="info-panel-row">
+                                    <span>Início da operação</span>
+                                    <span id="oa-inicio">—</span>
+                                </div>
+                                <div class="info-panel-row">
+                                    <span>Hodômetro de início</span>
+                                    <span id="oa-hodometro">—</span>
+                                </div>
+                                <div class="info-panel-row">
+                                    <span>Tempo decorrido</span>
+                                    <span id="oa-tempo">—</span>
+                                </div>
+                                <div class="info-panel-row">
+                                    <span>Combustível abastecido</span>
+                                    <span id="oa-combustivel">—</span>
+                                </div>
+                                <div id="oa-peso-row" class="info-panel-row" style="display:none;">
+                                    <span>Peso/Volume inicial carregado</span>
+                                    <span id="oa-peso">—</span>
+                                </div>
+                            </div>
+                            <div id="op-ativa-erro" class="at-alert at-alert-warning" style="display:none;">
+                                <i class="bi bi-info-circle"></i> Não foi possível carregar os dados da operação.
                             </div>
 
-                            <div id="campos-iniciar-operacao" style="display: none; padding: 12px; background: #f8fafc; border-radius: 6px; margin-bottom: 16px; border: 1px solid #e2e8f0;">
-                                <div class="at-form-group" style="margin-bottom: 8px;">
-                                    <label class="at-form-label">
-                                        <input type="checkbox" name="confirmacao" value="true"> Confirmo o início da operação (Hodômetro Inicial: <span th:text="${maquina.hodometroInicial}"></span>h)
+                            <form th:action="@{/maquinas/{id}/status(id=${maquina.id})}" method="post">
+                                <div class="at-form-group">
+                                    <label class="at-form-label" for="novoStatusA">Novo Status <span class="required">*</span></label>
+                                    <select id="novoStatusA" name="novoStatus" class="at-form-control at-form-select" required onchange="toggleMotivoEncerrar(this.value)">
+                                        <option value="">Selecione o novo status...</option>
+                                        <option value="Disponivel">Disponível</option>
+                                        <option value="Em Manutencao">Em Manutenção</option>
+                                        <option value="Inativa">Inativa</option>
+                                    </select>
+                                </div>
+
+                                <div class="at-form-group">
+                                    <label class="at-form-label" for="hodometroFimA">
+                                        Hodômetro Final (h) <span class="required">*</span>
+                                        <small id="hod-inicio-hint" style="color:var(--at-text-muted); font-weight:normal;"></small>
                                     </label>
+                                    <input type="number" step="0.1" id="hodometroFimA" name="hodometroFim" class="at-form-control" required>
                                 </div>
-                                <div class="at-form-group" id="campo-peso">
-                                    <label class="at-form-label" for="pesoCarregado">Peso / Volume Carregado <span th:if="${maquina.tipo == 'Pulverizador' || maquina.tipo == 'Semeadeira'}" class="required">*</span></label>
-                                    <input type="number" step="0.1" id="pesoCarregado" name="pesoCarregado" class="at-form-control" placeholder="Ex: 500.5">
+
+                                <div id="campo-peso-final-a" th:if="${maquina.tipo == 'Colheitadeira'}" class="at-form-group">
+                                    <label class="at-form-label" for="pesoFinalA">Peso Colhido (kg) <span class="required">*</span></label>
+                                    <input type="number" step="0.1" id="pesoFinalA" name="pesoFinal" class="at-form-control">
                                 </div>
+
+                                <div class="at-form-group">
+                                    <label class="at-form-label" for="observacoesA">Observações <span style="color:var(--at-text-muted); font-weight:normal;">(opcional)</span></label>
+                                    <textarea id="observacoesA" name="observacoes" class="at-form-control" rows="3" placeholder="Descreva as atividades realizadas..."></textarea>
+                                </div>
+
+                                <div id="campo-motivo-a" class="at-form-group" style="display:none;">
+                                    <label class="at-form-label" for="motivoA">Motivo <span class="required">*</span></label>
+                                    <textarea id="motivoA" name="motivo" class="at-form-control" rows="2" placeholder="Descreva o motivo da mudança de status..."></textarea>
+                                </div>
+
+                                <button type="submit" class="btn" style="width:100%; background:var(--at-danger); color:#fff; border-color:var(--at-danger); margin-top:8px;">
+                                    <i class="bi bi-stop-circle"></i> Encerrar Operação
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div th:unless="${maquina.status == 'Em Operacao'}" class="at-card">
+                        <div class="at-card-header">
+                            <h2 class="at-card-title">Alterar Status</h2>
+                        </div>
+                        <div class="at-card-body">
+                            <div class="scenario-tabs">
+                                <button type="button" class="scenario-tab active" onclick="showScenario('b')">
+                                    <i class="bi bi-play-circle"></i> Iniciar Operação
+                                </button>
+                                <button type="button" class="scenario-tab" onclick="showScenario('c')" th:if="${maquina.status != 'Inativa'}">
+                                    <i class="bi bi-pause-circle"></i> Inativar
+                                </button>
+                                <button type="button" class="scenario-tab" onclick="showScenario('d')" th:if="${maquina.status != 'Em Manutencao'}">
+                                    <i class="bi bi-tools"></i> Manutenção
+                                </button>
                             </div>
 
-                            <div id="campos-encerrar-operacao" style="display: none; padding: 12px; background: #f8fafc; border-radius: 6px; margin-bottom: 16px; border: 1px solid #e2e8f0;">
-                                <p style="font-size: 0.85rem; color: var(--at-text-secondary); margin-bottom: 12px;">Preencha os dados de encerramento da operação.</p>
-                                <div class="at-form-group">
-                                    <label class="at-form-label" for="hodometroFim">Hodômetro Final (h) <span class="required">*</span></label>
-                                    <input type="number" step="0.1" id="hodometroFim" name="hodometroFim" class="at-form-control">
-                                    <span class="at-form-hint">Hodômetro de início: <span th:text="${maquina.hodometroInicial}"></span>h</span>
+                            <div id="scenario-b" class="scenario-panel active">
+                                <div class="info-panel">
+                                    <div class="info-panel-row">
+                                        <span>Hodômetro atual</span>
+                                        <span th:text="${maquina.hodometroInicial} + ' h'">0 h</span>
+                                    </div>
+                                    <div class="info-panel-row">
+                                        <span>Nível de risco</span>
+                                        <span th:text="${maquina.nivelRisco}">Baixo</span>
+                                    </div>
+                                    <div class="info-panel-row" th:if="${maquina.tipoCombustivel}">
+                                        <span>Tipo de combustível</span>
+                                        <span th:text="${maquina.tipoCombustivel}">Diesel</span>
+                                    </div>
+                                    <div class="info-panel-row" th:if="${maquina.intervaloTrocaOleoHoras}">
+                                        <span>Intervalo troca de óleo</span>
+                                        <span th:text="${maquina.intervaloTrocaOleoHoras} + ' h'">250 h</span>
+                                    </div>
                                 </div>
-                                <div class="at-form-group">
-                                    <label class="at-form-label" for="observacoes">Observações / Relatório <span class="required">*</span></label>
-                                    <textarea id="observacoes" name="observacoes" class="at-form-control" rows="3" placeholder="Descreva as atividades realizadas..."></textarea>
-                                </div>
+                                <form th:action="@{/maquinas/{id}/status(id=${maquina.id})}" method="post">
+                                    <input type="hidden" name="novoStatus" value="Em Operacao">
+                                    <div class="at-form-group">
+                                        <label class="at-form-label">
+                                            <input type="checkbox" name="confirmacao" value="true" required>
+                                            Confirmo os dados acima e inicio a operação
+                                        </label>
+                                    </div>
+                                    <div th:if="${maquina.tipo == 'Pulverizador' or maquina.tipo == 'Semeadeira'}" class="at-form-group">
+                                        <label class="at-form-label" for="pesoCarregadoB">Peso/Volume Carregado <span class="required">*</span></label>
+                                        <input type="number" step="0.1" id="pesoCarregadoB" name="pesoCarregado" class="at-form-control" placeholder="Ex: 500.0" required>
+                                    </div>
+                                    <div class="at-form-group">
+                                        <label class="at-form-label" for="observacoesB">Observações iniciais <span style="color:var(--at-text-muted); font-weight:normal;">(opcional)</span></label>
+                                        <textarea id="observacoesB" name="observacoes" class="at-form-control" rows="2" placeholder="Observações antes de iniciar..."></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary" style="width:100%;">
+                                        <i class="bi bi-play-circle"></i> Iniciar Operação
+                                    </button>
+                                </form>
                             </div>
 
-                            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 12px;">Atualizar Status</button>
-                        </form>
+                            <div id="scenario-c" class="scenario-panel">
+                                <form th:action="@{/maquinas/{id}/status(id=${maquina.id})}" method="post">
+                                    <input type="hidden" name="novoStatus" value="Inativa">
+                                    <div class="at-form-group">
+                                        <label class="at-form-label" for="motivoC">Motivo da inativação <span class="required">*</span></label>
+                                        <textarea id="motivoC" name="motivo" class="at-form-control" rows="3" placeholder="Descreva o motivo da inativação..." required></textarea>
+                                    </div>
+                                    <div class="at-form-group">
+                                        <label class="at-form-label">
+                                            <input type="checkbox" name="confirmacao" value="true" required>
+                                            Confirmo a inativação desta máquina
+                                        </label>
+                                    </div>
+                                    <button type="submit" class="btn" style="width:100%; background:var(--at-warning); color:#fff; border-color:var(--at-warning);">
+                                        <i class="bi bi-pause-circle"></i> Confirmar Inativação
+                                    </button>
+                                </form>
+                            </div>
+
+                            <div id="scenario-d" class="scenario-panel">
+                                <form th:action="@{/maquinas/{id}/status(id=${maquina.id})}" method="post">
+                                    <input type="hidden" name="novoStatus" value="Em Manutencao">
+                                    <div class="at-form-group">
+                                        <label class="at-form-label" for="motivoD">Descreva o problema ou manutenção necessária <span class="required">*</span></label>
+                                        <textarea id="motivoD" name="motivo" class="at-form-control" rows="3" placeholder="Ex: Falha no sistema hidráulico, verificação preventiva..." required></textarea>
+                                    </div>
+                                    <div class="at-form-group">
+                                        <label class="at-form-label">
+                                            <input type="checkbox" name="confirmacao" value="true" required>
+                                            Confirmo o envio para manutenção
+                                        </label>
+                                    </div>
+                                    <button type="submit" class="btn" style="width:100%; background:#f59e0b; color:#fff; border-color:#f59e0b;">
+                                        <i class="bi bi-tools"></i> Enviar para Manutenção
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="at-card">
                     <div class="at-card-header">
-                        <h2 class="at-card-title">Últimas Operações</h2>
+                        <h2 class="at-card-title">Últimas Movimentações</h2>
                     </div>
                     <div class="at-card-body" style="padding: 0;">
                         <div th:if="${#lists.isEmpty(historico)}" style="padding: 24px; text-align: center; color: var(--at-text-muted);">
-                            Nenhuma operação registrada.
+                            Nenhuma movimentação registrada.
                         </div>
                         <div class="history-list" th:if="${!#lists.isEmpty(historico)}" style="margin: 0; border: none; border-radius: 0;">
                             <div class="history-item" th:each="r : ${historico}">
@@ -167,7 +312,8 @@
                                         <div class="history-stats" th:if="${r.dataFim}">
                                             <div th:if="${r.horasOperadas}"><strong th:text="${r.horasOperadas} + 'h'">1.5h</strong></div>
                                             <div th:if="${r.kmRodados}"><span th:text="${r.kmRodados} + ' un rodadas'">10</span></div>
-                                            <div th:if="${r.pesoCarregado}"><span th:text="${r.pesoCarregado} + ' kg/L'">100</span></div>
+                                            <div th:if="${r.pesoCarregado}"><span th:text="${r.pesoCarregado} + ' kg/L carregado'">100</span></div>
+                                            <div th:if="${r.pesoFinal}"><span th:text="${r.pesoFinal} + ' kg colhido'">100</span></div>
                                         </div>
                                     </div>
                                 </th:block>
@@ -202,8 +348,29 @@
                                     </div>
                                 </th:block>
 
+                                <th:block th:if="${r.tipo == 'MudancaStatus'}">
+                                    <div class="history-date">
+                                        <span th:text="${r.dataAlteracao.replace('T', ' ').substring(0, 16)}">Data</span>
+                                        <span class="at-badge at-badge-neutral" style="font-size: 0.65rem; padding: 2px 6px; margin-left:4px;">Mudança de Status</span>
+                                    </div>
+                                    <div class="history-body">
+                                        <div class="history-info">
+                                            Por: <strong th:text="${r.nomeUsuario}">Nome</strong>
+                                            <div style="font-size: 0.8rem; margin-top: 4px;">
+                                                <span th:text="${r.statusAnterior}">Anterior</span> → <strong th:text="${r.novoStatus}">Novo</strong>
+                                            </div>
+                                            <div style="font-size: 0.8rem; margin-top: 2px; color: var(--at-text-secondary);" th:text="${r.motivo}">Motivo</div>
+                                        </div>
+                                    </div>
+                                </th:block>
+
                             </div>
                         </div>
+                    </div>
+                    <div style="padding: 12px 16px; border-top: 1px solid var(--at-border); text-align: center;">
+                        <a th:href="@{/maquinas/{id}/historico-operacoes(id=${maquina.id})}" style="font-size: 0.85rem; color: var(--at-text-muted);">
+                            <i class="bi bi-clock-history"></i> Ver histórico completo de operações
+                        </a>
                     </div>
                 </div>
             </div>
@@ -216,50 +383,76 @@
     </div>
 </div>
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
-<script>
-    function toggleCampos(novoStatus, statusAtual, tipoMaquina) {
-        var iniciar = document.getElementById('campos-iniciar-operacao');
-        var encerrar = document.getElementById('campos-encerrar-operacao');
-        var hodFim = document.getElementById('hodometroFim');
-        var obs = document.getElementById('observacoes');
+<script th:inline="javascript">
+    var maquinaId = /*[[${maquina.id}]]*/ 0;
+    var statusAtual = /*[[${maquina.status}]]*/ '';
+    var tipoMaquina = /*[[${maquina.tipo}]]*/ '';
+    var hodometroInicial = /*[[${maquina.hodometroInicial}]]*/ 0;
 
-        iniciar.style.display = 'none';
-        encerrar.style.display = 'none';
-        if (hodFim) hodFim.removeAttribute('required');
-        if (obs) obs.removeAttribute('required');
+    function showScenario(tab) {
+        document.querySelectorAll('.scenario-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.scenario-tab').forEach(t => t.classList.remove('active'));
+        var panel = document.getElementById('scenario-' + tab);
+        if (panel) panel.classList.add('active');
+        var tabs = document.querySelectorAll('.scenario-tab');
+        var idx = ['b','c','d'].indexOf(tab);
+        if (tabs[idx]) tabs[idx].classList.add('active');
+    }
 
-        if (novoStatus === 'Em Operacao') {
-            iniciar.style.display = 'block';
-        } else if (statusAtual === 'Em Operacao' && novoStatus !== '') {
-            encerrar.style.display = 'block';
-            if (hodFim) hodFim.setAttribute('required', '');
-            if (obs) obs.setAttribute('required', '');
+    function toggleMotivoEncerrar(val) {
+        var campoMotivo = document.getElementById('campo-motivo-a');
+        if (!campoMotivo) return;
+        var motivoInput = document.getElementById('motivoA');
+        if (val === 'Inativa' || val === 'Em Manutencao') {
+            campoMotivo.style.display = 'block';
+            if (motivoInput) motivoInput.setAttribute('required', '');
+        } else {
+            campoMotivo.style.display = 'none';
+            if (motivoInput) motivoInput.removeAttribute('required');
         }
     }
 
-    (function() {
-        var form = document.getElementById('form-trocar-status');
-        if (!form) return;
-        form.addEventListener('submit', function(e) {
-            var encerrar = document.getElementById('campos-encerrar-operacao');
-            if (encerrar && encerrar.style.display !== 'none') {
-                var obs = document.getElementById('observacoes');
-                if (obs && obs.value.trim() === '') {
-                    e.preventDefault();
-                    obs.focus();
-                    obs.setCustomValidity('Observações são obrigatórias ao encerrar uma operação.');
-                    obs.reportValidity();
+    if (statusAtual === 'Em Operacao') {
+        document.getElementById('hod-inicio-hint').textContent = '(início: ' + hodometroInicial + 'h)';
+
+        fetch('/api/maquinas/' + maquinaId + '/operacao-ativa')
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.error) {
+                    document.getElementById('op-ativa-loading').style.display = 'none';
+                    document.getElementById('op-ativa-erro').style.display = 'block';
                     return;
                 }
-            }
-        });
-        var obs = document.getElementById('observacoes');
-        if (obs) {
-            obs.addEventListener('input', function() {
-                this.setCustomValidity('');
+                document.getElementById('op-ativa-loading').style.display = 'none';
+                document.getElementById('op-ativa-painel').style.display = 'block';
+
+                document.getElementById('oa-operador').textContent = data.nomeOperador || '—';
+
+                var inicio = data.dataInicio ? data.dataInicio.replace('T', ' ').substring(0, 16) : '—';
+                document.getElementById('oa-inicio').textContent = inicio;
+
+                document.getElementById('oa-hodometro').textContent = data.hodometroInicio ? data.hodometroInicio + ' h' : '—';
+
+                if (data.horasOperadas != null) {
+                    document.getElementById('oa-tempo').textContent = data.horasOperadas + ' h decorridas';
+                }
+
+                if (data.consumoEstimadoOperacao != null) {
+                    document.getElementById('oa-combustivel').textContent = data.consumoEstimadoOperacao + ' L';
+                } else {
+                    document.getElementById('oa-combustivel').textContent = 'Nenhum abastecimento';
+                }
+
+                if (data.pesoCarregado != null) {
+                    document.getElementById('oa-peso-row').style.display = 'flex';
+                    document.getElementById('oa-peso').textContent = data.pesoCarregado;
+                }
+            })
+            .catch(function() {
+                document.getElementById('op-ativa-loading').style.display = 'none';
+                document.getElementById('op-ativa-erro').style.display = 'block';
             });
-        }
-    })();
+    }
 </script>
 </body>
 </html>

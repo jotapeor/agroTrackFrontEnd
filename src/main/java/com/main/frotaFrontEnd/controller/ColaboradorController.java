@@ -9,8 +9,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Controller
 public class ColaboradorController {
@@ -30,7 +32,11 @@ public class ColaboradorController {
             List<Map<String, Object>> colaboradores = apiService.listarColaboradores(token);
             if (meuId != null && colaboradores != null) {
                 colaboradores = colaboradores.stream()
-                        .filter(c -> !meuId.equals(c.get("id_usuario")))
+                        .filter(c -> {
+                            Object idObj = c.get("id_usuario");
+                            if (idObj == null) return true;
+                            return !meuId.equals(((Number) idObj).longValue());
+                        })
                         .toList();
             }
             model.addAttribute("colaboradores", colaboradores != null ? colaboradores : List.of());
@@ -68,9 +74,23 @@ public class ColaboradorController {
             model.addAttribute("roleLogado", role);
 
             List<Map<String, Object>> maquinas = apiService.listarMaquinas(token);
-            model.addAttribute("maquinas", maquinas);
+            if (maquinas != null) {
+                for (Map<String, Object> m : maquinas) {
+                    Object idObj = m.get("id");
+                    if (idObj instanceof Number && !(idObj instanceof Long)) {
+                        m.put("id", ((Number) idObj).longValue());
+                    }
+                }
+            }
+            model.addAttribute("maquinas", maquinas != null ? maquinas : List.of());
 
-            List<Long> idsVinculados = apiService.listarMaquinasVinculadas(id, token);
+            List<?> rawIds = apiService.listarMaquinasVinculadas(id, token);
+            Set<Long> idsVinculados = new HashSet<>();
+            if (rawIds != null) {
+                for (Object x : rawIds) {
+                    if (x instanceof Number) idsVinculados.add(((Number) x).longValue());
+                }
+            }
             model.addAttribute("idsVinculados", idsVinculados);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Colaborador não encontrado.");
@@ -145,8 +165,11 @@ public class ColaboradorController {
             if (idsMaquinas == null) idsMaquinas = List.of();
             apiService.vincularMaquinas(id, idsMaquinas, token);
             redirectAttributes.addFlashAttribute("mensagemSucesso", "Vínculos atualizados com sucesso!");
+        } catch (HttpStatusCodeException ex) {
+            String msg = extrairMensagemErro(ex.getResponseBodyAsString());
+            redirectAttributes.addFlashAttribute("errorMessage", msg != null ? msg : "Erro ao vincular máquinas (HTTP " + ex.getStatusCode().value() + ").");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Erro ao vincular máquinas.");
+            redirectAttributes.addFlashAttribute("errorMessage", "Erro ao vincular máquinas: " + e.getMessage());
         }
         return "redirect:/colaboradores/editar/" + id;
     }
@@ -167,6 +190,15 @@ public class ColaboradorController {
             redirectAttributes.addFlashAttribute("errorMessage", "Erro ao excluir colaborador.");
         }
         return "redirect:/colaboradores";
+    }
+
+    private String extrairMensagemErro(String body) {
+        if (body == null || body.isEmpty()) return null;
+        int start = body.indexOf("\"message\":\"");
+        if (start == -1) return null;
+        start += 11;
+        int end = body.indexOf("\"", start);
+        return end > start ? body.substring(start, end) : null;
     }
 
     private boolean isProprietario(HttpSession session) {
