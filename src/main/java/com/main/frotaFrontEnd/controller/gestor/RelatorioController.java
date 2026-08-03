@@ -1,6 +1,8 @@
-package com.main.frotaFrontEnd.controller;
+package com.main.frotaFrontEnd.controller.gestor;
 
-import com.main.frotaFrontEnd.service.ApiService;
+import com.main.frotaFrontEnd.service.ColaboradorApiService;
+import com.main.frotaFrontEnd.service.MaquinaApiService;
+import com.main.frotaFrontEnd.service.RelatorioApiService;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +21,11 @@ public class RelatorioController {
     private static final Logger log = LoggerFactory.getLogger(RelatorioController.class);
 
     @Autowired
-    private ApiService apiService;
+    private RelatorioApiService relatorioApiService;
+    @Autowired
+    private ColaboradorApiService colaboradorApiService;
+    @Autowired
+    private MaquinaApiService maquinaApiService;
 
     @GetMapping("/relatorios")
     public String relatorios(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
@@ -32,10 +38,10 @@ public class RelatorioController {
         }
 
         try {
-            List<Map<String, Object>> maquinas = apiService.listarMaquinas(token);
+            List<Map<String, Object>> maquinas = maquinaApiService.listarMaquinas(token);
             model.addAttribute("maquinas", maquinas != null ? maquinas : List.of());
 
-            List<Map<String, Object>> operadores = apiService.listarColaboradores(token);
+            List<Map<String, Object>> operadores = colaboradorApiService.listarColaboradores(token);
             model.addAttribute("operadores", operadores != null ? operadores : List.of());
 
         } catch (Exception e) {
@@ -43,7 +49,7 @@ public class RelatorioController {
             model.addAttribute("operadores", List.of());
         }
 
-        return "relatorios";
+        return "gestor/relatorios";
     }
 
     @GetMapping("/api/front/relatorios/consumo-por-maquina")
@@ -55,7 +61,7 @@ public class RelatorioController {
         String token = (String) session.getAttribute("token");
         if (token == null) return List.of();
         try {
-            return apiService.relatorioConsumo(dataInicio, dataFim, token);
+            return relatorioApiService.relatorioConsumo(dataInicio, dataFim, token);
         } catch (Exception e) {
             log.error("Erro ao buscar relatório consumo-por-maquina", e);
             return List.of();
@@ -71,7 +77,7 @@ public class RelatorioController {
         String token = (String) session.getAttribute("token");
         if (token == null) return Map.of();
         try {
-            return apiService.relatorioRisco(dataInicio, dataFim, token);
+            return relatorioApiService.relatorioRisco(dataInicio, dataFim, token);
         } catch (Exception e) {
             log.error("Erro ao buscar relatório risco-distribuicao", e);
             return Map.of();
@@ -87,7 +93,7 @@ public class RelatorioController {
         String token = (String) session.getAttribute("token");
         if (token == null) return Map.of();
         try {
-            return apiService.relatorioOrdensPorStatus(dataInicio, dataFim, token);
+            return relatorioApiService.relatorioOrdensPorStatus(dataInicio, dataFim, token);
         } catch (Exception e) {
             log.error("Erro ao buscar relatório ordens-por-status", e);
             return Map.of();
@@ -105,7 +111,7 @@ public class RelatorioController {
         String token = (String) session.getAttribute("token");
         if (token == null) return List.of();
         try {
-            return apiService.relatorioHorasKm(dataInicio, dataFim, idMaquina, idOperador, token);
+            return relatorioApiService.relatorioHorasKm(dataInicio, dataFim, idMaquina, idOperador, token);
         } catch (Exception e) {
             log.error("Erro ao buscar relatório horas-km", e);
             return List.of();
@@ -121,7 +127,7 @@ public class RelatorioController {
         String token = (String) session.getAttribute("token");
         if (token == null) return List.of();
         try {
-            return apiService.relatorioAlertasTimeline(dataInicio, dataFim, token);
+            return relatorioApiService.relatorioAlertasTimeline(dataInicio, dataFim, token);
         } catch (Exception e) {
             log.error("Erro ao buscar relatório alertas-timeline", e);
             return List.of();

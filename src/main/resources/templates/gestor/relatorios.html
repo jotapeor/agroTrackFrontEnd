@@ -3,7 +3,7 @@
 <head>
     <title>AgroTrack — Relatórios & Análises</title>
     <meta charset="UTF-8">
-    <meta name="description" content="AgroTrack — Visão Financeira e Operacional da Frota">
+    <meta name="description" content="AgroTrack — Relatórios e Análises da Frota Agrícola">
     <link rel="icon" type="image/png" th:href="@{/icon.png}">
     <th:block th:replace="~{fragments/layout :: head-content}"></th:block>
 
@@ -38,7 +38,7 @@
         <main class="at-content" id="main-content">
             <div class="at-page-header fade-in">
                 <h1 class="at-page-title">Painel de Análise</h1>
-                <p class="at-page-subtitle">Inteligência de dados e visão operacional unificada</p>
+                <p class="at-page-subtitle">Análise de consumo, manutenção e desempenho da frota</p>
             </div>
 
             <div class="at-panel-glass fade-in delay-1" style="display:flex; flex-wrap:wrap; gap:16px; align-items:flex-end;">
@@ -74,15 +74,16 @@
             <div class="chart-grid">
 
                 <div class="at-card fade-in delay-2" style="padding: 24px;">
-                    <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 24px; color: #1e293b; display: flex; align-items: center; gap: 12px;"><i class="bi bi-fuel-pump" style="color: #4f46e5; background: #eef2ff; padding: 10px; border-radius: 12px; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.1);"></i> Eficiência de Consumo (L/h ou L/km)</h3>
+                    <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 24px; color: #1e293b; display: flex; align-items: center; gap: 12px;"><i class="bi bi-fuel-pump" style="color: #4f46e5; background: #eef2ff; padding: 10px; border-radius: 12px; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.1);"></i> Consumo Total por Máquina no Período (Litros)</h3>
                     <div class="chart-wrapper">
                         <canvas id="chartConsumo"></canvas>
                     </div>
                 </div>
 
                 <div class="at-card fade-in delay-3" style="padding: 24px;">
-                    <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 24px; color: #1e293b; display: flex; align-items: center; gap: 12px;"><i class="bi bi-shield-exclamation" style="color: #4f46e5; background: #eef2ff; padding: 10px; border-radius: 12px; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.1);"></i> Matriz de Risco Operacional</h3>
-                    <div class="chart-wrapper">
+                    <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 24px; color: #1e293b; display: flex; align-items: center; gap: 12px;"><i class="bi bi-shield-exclamation" style="color: #4f46e5; background: #eef2ff; padding: 10px; border-radius: 12px; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.1);"></i> Distribuição de Risco Atual das Máquinas</h3>
+                    <small style="color:var(--at-text-muted);">Reflete o estado atual, sem filtro de data</small>
+                    <div class="chart-wrapper" style="margin-top: 16px;">
                         <canvas id="chartRisco"></canvas>
                     </div>
                 </div>
@@ -166,8 +167,17 @@
 
     function loadConsumo() {
         fetch('/api/front/relatorios/consumo-por-maquina' + getQueryParams())
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error('Erro ' + res.status);
+                return res.json();
+            })
             .then(data => {
+                if (!Array.isArray(data) || data.length === 0) {
+                    document.getElementById('chartConsumo').parentElement.innerHTML =
+                        '<p style="text-align:center;color:var(--at-text-muted);padding:24px;">Sem dados para o período selecionado.</p>';
+                    return;
+                }
+
                 const labels = data.map(d => d.nomeMaquina);
                 const values = data.map(d => d.consumoMedio);
 
@@ -179,7 +189,7 @@
                     data: {
                         labels: labels,
                         datasets: [{
-                            label: 'Consumo Médio',
+                            label: 'Consumo Total (L)',
                             data: values,
                             backgroundColor: createGradient(ctx, 'rgba(56, 189, 248, 0.85)', 'rgba(2, 132, 199, 0.85)'),
                             borderRadius: 6,
@@ -190,17 +200,39 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) { return context.parsed.y + ' L'; }
+                                }
+                            }
+                        },
                         scales: { y: { beginAtZero: true } }
                     }
                 });
+            })
+            .catch(err => {
+                document.getElementById('chartConsumo').parentElement.innerHTML =
+                    '<p style="text-align:center;color:var(--at-danger);padding:24px;">Erro ao carregar dados de consumo.</p>';
             });
     }
 
     function loadRisco() {
         fetch('/api/front/relatorios/risco-distribuicao' + getQueryParams())
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error('Erro ' + res.status);
+                return res.json();
+            })
             .then(data => {
+                const isError = data && data.timestamp && data.status && data.path;
+                if (isError) throw new Error('Backend error: ' + data.message);
+                if (!data || Object.keys(data).length === 0) {
+                    document.getElementById('chartRisco').parentElement.innerHTML =
+                        '<p style="text-align:center;color:var(--at-text-muted);padding:24px;">Sem dados de risco disponíveis.</p>';
+                    return;
+                }
+
                 const labels = Object.keys(data);
                 const values = Object.values(data);
 
@@ -233,13 +265,28 @@
                         }
                     }
                 });
+            })
+            .catch(err => {
+                document.getElementById('chartRisco').parentElement.innerHTML =
+                    '<p style="text-align:center;color:var(--at-danger);padding:24px;">Erro ao carregar dados de risco.</p>';
             });
     }
 
     function loadOrdens() {
         fetch('/api/front/relatorios/ordens-por-status' + getQueryParams())
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error('Erro ' + res.status);
+                return res.json();
+            })
             .then(data => {
+                const isError = data && data.timestamp && data.status && data.path;
+                if (isError) throw new Error('Backend error: ' + data.message);
+                if (!data || Object.keys(data).length === 0) {
+                    document.getElementById('chartOrdens').parentElement.innerHTML =
+                        '<p style="text-align:center;color:var(--at-text-muted);padding:24px;">Sem ordens para o período selecionado.</p>';
+                    return;
+                }
+
                 const labels = Object.keys(data);
                 const values = Object.values(data);
 
@@ -265,13 +312,26 @@
                         scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
                     }
                 });
+            })
+            .catch(err => {
+                document.getElementById('chartOrdens').parentElement.innerHTML =
+                    '<p style="text-align:center;color:var(--at-danger);padding:24px;">Erro ao carregar dados de manutenções.</p>';
             });
     }
 
     function loadAlertas() {
         fetch('/api/front/relatorios/alertas-timeline' + getQueryParams())
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error('Erro ' + res.status);
+                return res.json();
+            })
             .then(data => {
+                if (!Array.isArray(data)) throw new Error('Resposta inválida');
+                if (data.length === 0) {
+                    document.getElementById('chartAlertas').parentElement.innerHTML =
+                        '<p style="text-align:center;color:var(--at-text-muted);padding:24px;">Sem ocorrências para o período selecionado.</p>';
+                    return;
+                }
                 const datesSet = new Set(data.map(d => d.data));
                 const dates = Array.from(datesSet).sort();
 
@@ -328,6 +388,10 @@
                         interaction: { intersect: false, mode: 'index' }
                     }
                 });
+            })
+            .catch(err => {
+                document.getElementById('chartAlertas').parentElement.innerHTML =
+                    '<p style="text-align:center;color:var(--at-danger);padding:24px;">Erro ao carregar linha do tempo de ocorrências.</p>';
             });
     }
 

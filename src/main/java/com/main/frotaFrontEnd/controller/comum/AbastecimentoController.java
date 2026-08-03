@@ -1,6 +1,7 @@
-package com.main.frotaFrontEnd.controller;
+package com.main.frotaFrontEnd.controller.comum;
 
-import com.main.frotaFrontEnd.service.ApiService;
+import com.main.frotaFrontEnd.service.AbastecimentoApiService;
+import com.main.frotaFrontEnd.service.MaquinaApiService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -16,7 +17,9 @@ import java.util.Map;
 public class AbastecimentoController {
 
     @Autowired
-    private ApiService apiService;
+    private AbastecimentoApiService abastecimentoApiService;
+    @Autowired
+    private MaquinaApiService maquinaApiService;
 
     @GetMapping
     public String exibirFormulario(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
@@ -26,12 +29,12 @@ public class AbastecimentoController {
             return "redirect:/login";
         }
         try {
-            List<Map<String, Object>> maquinas = apiService.listarMaquinas(token);
+            List<Map<String, Object>> maquinas = maquinaApiService.listarMaquinas(token);
             model.addAttribute("maquinas", maquinas != null ? maquinas : List.of());
         } catch (Exception e) {
             model.addAttribute("maquinas", List.of());
         }
-        return "abastecimento";
+        return "comum/abastecimento";
     }
 
     @PostMapping
@@ -48,7 +51,7 @@ public class AbastecimentoController {
             return "redirect:/login";
         }
         try {
-            apiService.registrarAbastecimento(idMaquina, dataAbastecimento, litros, tipoCombustivel, hodometroAtual, token);
+            abastecimentoApiService.registrarAbastecimento(idMaquina, dataAbastecimento, litros, tipoCombustivel, hodometroAtual, token);
             redirectAttributes.addFlashAttribute("mensagemSucesso", "Abastecimento registrado com sucesso!");
         } catch (RuntimeException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());

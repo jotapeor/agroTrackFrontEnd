@@ -1,6 +1,7 @@
-package com.main.frotaFrontEnd.controller;
+package com.main.frotaFrontEnd.controller.comum;
 
-import com.main.frotaFrontEnd.service.ApiService;
+import com.main.frotaFrontEnd.service.ManutencaoApiService;
+import com.main.frotaFrontEnd.service.MaquinaApiService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -17,7 +18,9 @@ import java.util.Map;
 public class ManutencaoController {
 
     @Autowired
-    private ApiService apiService;
+    private ManutencaoApiService manutencaoApiService;
+    @Autowired
+    private MaquinaApiService maquinaApiService;
 
     @GetMapping
     public String listarOrdens(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
@@ -27,13 +30,13 @@ public class ManutencaoController {
             return "redirect:/login";
         }
         try {
-            List<Map<String, Object>> ordens = apiService.listarOrdens(token);
+            List<Map<String, Object>> ordens = manutencaoApiService.listarOrdens(token);
             model.addAttribute("ordens", ordens != null ? ordens : List.of());
         } catch (Exception e) {
             model.addAttribute("ordens", List.of());
             model.addAttribute("errorMessage", "Erro ao carregar ordens de manutenção.");
         }
-        return "lista-ordens";
+        return "comum/lista-ordens";
     }
 
     @GetMapping("/nova")
@@ -44,12 +47,12 @@ public class ManutencaoController {
             return "redirect:/login";
         }
         try {
-            List<Map<String, Object>> maquinas = apiService.listarMaquinas(token);
+            List<Map<String, Object>> maquinas = maquinaApiService.listarMaquinas(token);
             model.addAttribute("maquinas", maquinas);
         } catch (Exception e) {
             model.addAttribute("maquinas", List.of());
         }
-        return "nova-ordem";
+        return "comum/nova-ordem";
     }
 
     @PostMapping("/nova")
@@ -65,7 +68,7 @@ public class ManutencaoController {
             return "redirect:/login";
         }
         try {
-            apiService.abrirOrdem(idMaquina, urgencia, descricao, token);
+            manutencaoApiService.abrirOrdem(idMaquina, urgencia, descricao, token);
             redirectAttributes.addFlashAttribute("mensagemSucesso", "Ordem de manutenção aberta com sucesso!");
             return "redirect:/ordens";
         } catch (HttpStatusCodeException ex) {
@@ -89,7 +92,7 @@ public class ManutencaoController {
         }
         String token = (String) session.getAttribute("token");
         try {
-            apiService.aprovarOrdem(id, aprovada, token);
+            manutencaoApiService.aprovarOrdem(id, aprovada, token);
             redirectAttributes.addFlashAttribute("mensagemSucesso", "Ordem atualizada com sucesso!");
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("errorMessage", "Erro ao atualizar ordem.");
@@ -109,7 +112,7 @@ public class ManutencaoController {
         }
         String token = (String) session.getAttribute("token");
         try {
-            apiService.encerrarOrdem(id, observacao, token);
+            manutencaoApiService.encerrarOrdem(id, observacao, token);
             redirectAttributes.addFlashAttribute("mensagemSucesso", "Ordem encerrada com sucesso!");
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("errorMessage", "Erro ao encerrar ordem.");
@@ -128,7 +131,7 @@ public class ManutencaoController {
         }
         String token = (String) session.getAttribute("token");
         try {
-            apiService.removerOrdem(id, token);
+            manutencaoApiService.removerOrdem(id, token);
             redirectAttributes.addFlashAttribute("mensagemSucesso", "Ordem removida da aba com sucesso!");
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("errorMessage", "Erro ao remover ordem da aba.");

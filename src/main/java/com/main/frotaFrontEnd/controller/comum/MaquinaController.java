@@ -1,6 +1,8 @@
-package com.main.frotaFrontEnd.controller;
+package com.main.frotaFrontEnd.controller.comum;
 
-import com.main.frotaFrontEnd.service.ApiService;
+import com.main.frotaFrontEnd.service.MaquinaApiService;
+import com.main.frotaFrontEnd.service.OperacaoApiService;
+import com.main.frotaFrontEnd.service.RelatorioApiService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -17,7 +19,11 @@ import java.util.Map;
 public class MaquinaController {
 
     @Autowired
-    private ApiService apiService;
+    private MaquinaApiService maquinaApiService;
+    @Autowired
+    private OperacaoApiService operacaoApiService;
+    @Autowired
+    private RelatorioApiService relatorioApiService;
 
     @GetMapping("/maquinas")
     public String listar(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
@@ -27,13 +33,13 @@ public class MaquinaController {
             return "redirect:/login";
         }
         try {
-            List<Map<String, Object>> maquinas = apiService.listarMaquinas(token);
+            List<Map<String, Object>> maquinas = maquinaApiService.listarMaquinas(token);
             model.addAttribute("maquinas", maquinas != null ? maquinas : List.of());
         } catch (Exception e) {
             e.printStackTrace();
             model.addAttribute("maquinas", List.of());
         }
-        return "lista-maquinas";
+        return "comum/lista-maquinas";
     }
 
     @GetMapping("/maquinas/editar/{id}")
@@ -44,15 +50,15 @@ public class MaquinaController {
         }
         String token = (String) session.getAttribute("token");
         try {
-            Map<String, Object> maquina = apiService.buscarMaquina(id, token);
+            Map<String, Object> maquina = maquinaApiService.buscarMaquina(id, token);
             model.addAttribute("maquina", maquina);
-            List<Map<String, Object>> fazendas = apiService.listarFazendas(token);
+            List<Map<String, Object>> fazendas = maquinaApiService.listarFazendas(token);
             model.addAttribute("fazendas", fazendas);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Máquina não encontrada.");
             return "redirect:/maquinas";
         }
-        return "editar-maquina";
+        return "proprietario/editar-maquina";
     }
 
     @PostMapping("/maquinas/editar/{id}")
@@ -87,7 +93,7 @@ public class MaquinaController {
         }
         String token = (String) session.getAttribute("token");
         try {
-            apiService.atualizarMaquina(foto, id, nome, tipo, marca, modelo, ano,
+            maquinaApiService.atualizarMaquina(foto, id, nome, tipo, marca, modelo, ano,
                     numeroSerie, placa, hodometroInicial, capacidadeTanque, tipoCombustivel,
                     combustivelExtra, intervaloTrocaOleo, intervaloInspecao, consumoMedio,
                     idFazenda, idTalhao, status, nivelRisco, dataAquisicao, valorAquisicao,
@@ -111,12 +117,12 @@ public class MaquinaController {
         }
         String token = (String) session.getAttribute("token");
         try {
-            List<Map<String, Object>> maquinas = apiService.listarMaquinasArquivadas(token);
+            List<Map<String, Object>> maquinas = maquinaApiService.listarMaquinasArquivadas(token);
             model.addAttribute("maquinas", maquinas != null ? maquinas : List.of());
         } catch (Exception e) {
             model.addAttribute("maquinas", List.of());
         }
-        return "lista-maquinas-arquivadas";
+        return "proprietario/lista-maquinas-arquivadas";
     }
 
     @PostMapping("/maquinas/{id}/reativar")
@@ -127,7 +133,7 @@ public class MaquinaController {
         }
         String token = (String) session.getAttribute("token");
         try {
-            apiService.reativarMaquina(id, token);
+            maquinaApiService.reativarMaquina(id, token);
             redirectAttributes.addFlashAttribute("mensagemSucesso", "Máquina reativada com sucesso!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Erro ao reativar máquina.");
@@ -143,7 +149,7 @@ public class MaquinaController {
         }
         String token = (String) session.getAttribute("token");
         try {
-            apiService.excluirMaquina(id, token);
+            maquinaApiService.excluirMaquina(id, token);
             redirectAttributes.addFlashAttribute("mensagemSucesso", "Máquina arquivada com sucesso!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Erro ao arquivar máquina.");
@@ -158,11 +164,11 @@ public class MaquinaController {
             return "redirect:/login";
         }
         try {
-            Map<String, Object> maquina = apiService.buscarMaquina(id, token);
-            List<Map<String, Object>> historico = apiService.obterHistoricoCompleto(id, token);
+            Map<String, Object> maquina = maquinaApiService.buscarMaquina(id, token);
+            List<Map<String, Object>> historico = operacaoApiService.obterHistoricoCompleto(id, token);
             model.addAttribute("maquina", maquina);
             model.addAttribute("historico", historico);
-            return "detalhes-maquina";
+            return "comum/detalhes-maquina";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Erro ao carregar histórico: " + e.getMessage());
             return "redirect:/maquinas";
@@ -177,12 +183,12 @@ public class MaquinaController {
         }
         String token = (String) session.getAttribute("token");
         try {
-            List<Map<String, Object>> fazendas = apiService.listarFazendas(token);
+            List<Map<String, Object>> fazendas = maquinaApiService.listarFazendas(token);
             model.addAttribute("fazendas", fazendas);
         } catch (Exception e) {
             model.addAttribute("fazendas", List.of());
         }
-        return "nova-maquina";
+        return "proprietario/nova-maquina";
     }
 
     @PostMapping("/nova-maquina")
@@ -214,7 +220,7 @@ public class MaquinaController {
         }
         String token = (String) session.getAttribute("token");
         try {
-            apiService.cadastrarMaquina(foto, nome, tipo, marca, modelo, ano,
+            maquinaApiService.cadastrarMaquina(foto, nome, tipo, marca, modelo, ano,
                     numeroSerie, placa, hodometroInicial, capacidadeTanque, tipoCombustivel,
                     combustivelExtra, intervaloTrocaOleo, intervaloInspecao, consumoMedio,
                     idFazenda, idTalhao, dataAquisicao, valorAquisicao, observacoes, token);
@@ -235,7 +241,7 @@ public class MaquinaController {
         String token = (String) session.getAttribute("token");
         if (token == null) return List.of();
         try {
-            return apiService.listarCombustiveisMaquina(id, token);
+            return maquinaApiService.listarCombustiveisMaquina(id, token);
         } catch (Exception e) {
             return List.of();
         }
@@ -247,7 +253,7 @@ public class MaquinaController {
         String token = (String) session.getAttribute("token");
         if (token == null) return List.of();
         try {
-            return apiService.listarTalhoes(String.valueOf(idFazenda), token);
+            return maquinaApiService.listarTalhoes(String.valueOf(idFazenda), token);
         } catch (Exception e) {
             return List.of();
         }
@@ -261,15 +267,15 @@ public class MaquinaController {
             return "redirect:/login";
         }
         try {
-            Map<String, Object> maquina = apiService.buscarMaquina(id, token);
+            Map<String, Object> maquina = maquinaApiService.buscarMaquina(id, token);
             model.addAttribute("maquina", maquina);
-            List<Map<String, Object>> historico = apiService.listarHistoricoMaquina(id, token);
+            List<Map<String, Object>> historico = operacaoApiService.listarHistoricoMaquina(id, token);
             model.addAttribute("historico", historico);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Máquina não encontrada.");
             return "redirect:/maquinas";
         }
-        return "trocar-status";
+        return "comum/trocar-status";
     }
 
     @PostMapping("/maquinas/{id}/status")
@@ -289,7 +295,7 @@ public class MaquinaController {
             return "redirect:/login";
         }
         try {
-            Map<String, Object> resumo = apiService.trocarStatusMaquina(id, novoStatus, confirmacao, pesoCarregado, hodometroFim, observacoes, motivo, pesoFinal, token);
+            Map<String, Object> resumo = operacaoApiService.trocarStatusMaquina(id, novoStatus, confirmacao, pesoCarregado, hodometroFim, observacoes, motivo, pesoFinal, token);
             redirectAttributes.addFlashAttribute("mensagemSucesso", "Status atualizado com sucesso!");
             if (resumo != null && !resumo.isEmpty()) {
                 redirectAttributes.addFlashAttribute("resumoOperacao", resumo);
@@ -305,14 +311,27 @@ public class MaquinaController {
         }
     }
 
+    @GetMapping(value = "/maquinas/{id}/operacao-ativa", produces = "application/json")
+    @ResponseBody
+    public Map<String, Object> operacaoAtivaJson(@PathVariable Long id, HttpSession session) {
+        String token = (String) session.getAttribute("token");
+        if (token == null) return Map.of("error", "unauthorized");
+        try {
+            Map<String, Object> result = operacaoApiService.obterOperacaoAtiva(id, token);
+            return result != null ? result : Map.of("error", "not_found");
+        } catch (Exception e) {
+            return Map.of("error", e.getMessage() != null ? e.getMessage() : "error");
+        }
+    }
+
     @GetMapping("/maquinas/{id}/historico-operacoes")
     public String historicoOperacoes(@PathVariable Long id, HttpSession session, Model model, RedirectAttributes redirectAttributes) {
         String token = (String) session.getAttribute("token");
         if (token == null) return "redirect:/login";
         try {
-            Map<String, Object> maquina = apiService.buscarMaquina(id, token);
+            Map<String, Object> maquina = maquinaApiService.buscarMaquina(id, token);
             model.addAttribute("maquina", maquina);
-            List<Map<String, Object>> historico = apiService.listarHistoricoMaquina(id, token);
+            List<Map<String, Object>> historico = operacaoApiService.listarHistoricoMaquina(id, token);
             List<Map<String, Object>> operacoes = historico.stream()
                 .filter(h -> "Operacao".equals(h.get("tipo")))
                 .collect(java.util.stream.Collectors.toList());
@@ -325,7 +344,7 @@ public class MaquinaController {
             redirectAttributes.addFlashAttribute("errorMessage", "Erro ao carregar histórico.");
             return "redirect:/maquinas";
         }
-        return "historico-operacoes";
+        return "comum/historico-operacoes";
     }
 
     @PostMapping("/maquinas/{id}/autorizar-risco")
@@ -339,7 +358,7 @@ public class MaquinaController {
             return "redirect:/login";
         }
         try {
-            apiService.autorizarRisco(id, justificativa, token);
+            maquinaApiService.autorizarRisco(id, justificativa, token);
             redirectAttributes.addFlashAttribute("mensagemSucesso", "Operação temporária autorizada com sucesso!");
         } catch (RuntimeException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
@@ -358,13 +377,13 @@ public class MaquinaController {
             return "redirect:/maquinas";
         }
         try {
-            Map<String, Object> maquina = apiService.buscarMaquina(id, token);
+            Map<String, Object> maquina = maquinaApiService.buscarMaquina(id, token);
             model.addAttribute("maquina", maquina);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Máquina não encontrada.");
             return "redirect:/maquinas";
         }
-        return "telemetria";
+        return "comum/telemetria";
     }
 
     @GetMapping("/api/maquinas/{id}/operacao-ativa")
@@ -373,7 +392,7 @@ public class MaquinaController {
         String token = (String) session.getAttribute("token");
         if (token == null) return Map.of("error", "Não autenticado");
         try {
-            return apiService.obterOperacaoAtiva(id, token);
+            return operacaoApiService.obterOperacaoAtiva(id, token);
         } catch (Exception e) {
             return Map.of("error", e.getMessage());
         }
@@ -385,7 +404,7 @@ public class MaquinaController {
         String token = (String) session.getAttribute("token");
         if (token == null) return Map.of("error", "Não autenticado");
         try {
-            return apiService.obterTelemetria(id, token);
+            return relatorioApiService.obterTelemetria(id, token);
         } catch (Exception e) {
             return Map.of("error", e.getMessage());
         }

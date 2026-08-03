@@ -30,7 +30,7 @@
                         <h2 class="at-card-title">Dados do Colaborador</h2>
                     </div>
                     <div class="at-card-body">
-                        <form th:action="@{/colaboradores/editar/{id}(id=${colaborador.id_usuario})}" method="post">
+                        <form th:action="@{/colaboradores/editar/{id}(id=${colaborador.id_usuario})}" method="post" enctype="multipart/form-data">
                             <div class="at-form-group">
                                 <label class="at-form-label" for="nome">Nome <span class="required">*</span></label>
                                 <input type="text" id="nome" name="nome" class="at-form-control"
@@ -40,6 +40,24 @@
                                 <label class="at-form-label" for="email">E-mail <span class="required">*</span></label>
                                 <input type="email" id="email" name="email" class="at-form-control"
                                        th:value="${colaborador.email}" required />
+                            </div>
+                            <div class="at-form-group" th:if="${session.role == 'PROPRIETARIO' or session.role == 'SOCIO'}">
+                                <label class="at-form-label" for="foto">Foto do Colaborador</label>
+                                <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 8px;">
+                                    <img th:if="${colaborador['foto_path'] != null}"
+                                         th:src="@{'/usuarios/' + ${colaborador['foto_path']}}"
+                                         style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--at-border);"
+                                         alt="Foto atual">
+                                    <span th:unless="${colaborador['foto_path'] != null}"
+                                          style="width:56px;height:56px;border-radius:50%;background:var(--at-surface-raised);
+                                                 display:flex;align-items:center;justify-content:center;
+                                                 border:2px solid var(--at-border);">
+                                        <i class="bi bi-person" style="font-size:1.5rem;color:var(--at-text-muted);"></i>
+                                    </span>
+                                    <input type="file" id="foto" name="foto" class="at-form-control"
+                                           accept="image/*" style="max-width: 300px;">
+                                </div>
+                                <span class="at-form-hint">Deixe em branco para manter a foto atual. Máximo: 5MB.</span>
                             </div>
                             <div class="at-grid at-grid-2">
                                 <div class="at-form-group">
