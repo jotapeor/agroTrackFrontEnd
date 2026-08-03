@@ -1,6 +1,6 @@
-package com.main.frotaFrontEnd.controller;
+package com.main.frotaFrontEnd.controller.proprietario;
 
-import com.main.frotaFrontEnd.service.ApiService;
+import com.main.frotaFrontEnd.service.ColaboradorApiService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -13,7 +13,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 public class ProprietarioController {
     @Autowired
-    ApiService apiService;
+    ColaboradorApiService colaboradorApiService;
 
     @GetMapping("/novo-colaborador")
     public String exibirFormulario(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
@@ -21,7 +21,7 @@ public class ProprietarioController {
             redirectAttributes.addFlashAttribute("errorMessage", "Acesso negado.");
             return "redirect:/dashboard";
         }
-        return "novo-colaborador";
+        return "proprietario/novo-colaborador";
     }
 
     @PostMapping("/novo-colaborador")
@@ -38,7 +38,7 @@ public class ProprietarioController {
             return "redirect:/dashboard";
         }
         try {
-            apiService.novoColaborador(nome, email, senha, perfil, foto, (String) session.getAttribute("token"));
+            colaboradorApiService.novoColaborador(nome, email, senha, perfil, foto, (String) session.getAttribute("token"));
             redirectAttributes.addFlashAttribute("mensagemSucesso", "Colaborador cadastrado com sucesso!");
         } catch (HttpStatusCodeException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", "Erro ao cadastrar.");

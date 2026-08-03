@@ -1,6 +1,7 @@
-package com.main.frotaFrontEnd.controller;
+package com.main.frotaFrontEnd.controller.comum;
 
-import com.main.frotaFrontEnd.service.ApiService;
+import com.main.frotaFrontEnd.service.AuthApiService;
+import com.main.frotaFrontEnd.service.ColaboradorApiService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -16,7 +17,9 @@ import java.util.Map;
 public class MeuPerfilController {
 
     @Autowired
-    private ApiService apiService;
+    private AuthApiService authApiService;
+    @Autowired
+    private ColaboradorApiService colaboradorApiService;
 
     @GetMapping("/api/usuarios/email-disponivel")
     @ResponseBody
@@ -29,7 +32,7 @@ public class MeuPerfilController {
             return Map.of("disponivel", false);
         }
         try {
-            Map<String, Object> resultado = apiService.verificarEmailDisponivel(email, idAtual, token);
+            Map<String, Object> resultado = colaboradorApiService.verificarEmailDisponivel(email, idAtual, token);
             return resultado != null ? resultado : Map.of("disponivel", true);
         } catch (Exception e) {
             return Map.of("disponivel", true);
@@ -48,13 +51,13 @@ public class MeuPerfilController {
         }
         String token = (String) session.getAttribute("token");
         try {
-            Map<String, Object> dados = apiService.buscarMeusDados(token);
+            Map<String, Object> dados = authApiService.buscarMeusDados(token);
             model.addAttribute("usuario", dados);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Erro ao carregar seus dados.");
             return "redirect:/dashboard";
         }
-        return "meu-perfil";
+        return "comum/meu-perfil";
     }
 
     @PostMapping("/meu-perfil")
@@ -73,15 +76,15 @@ public class MeuPerfilController {
         }
         String token = (String) session.getAttribute("token");
         try {
-            Map<String, Object> resposta = apiService.atualizarMeusDados(nome, email, foto, token);
+            Map<String, Object> resposta = authApiService.atualizarMeusDados(nome, email, foto, token);
 
             String novoTicket = (String) resposta.get("token");
             if (novoTicket != null) {
                 session.setAttribute("token", novoTicket);
-                session.setAttribute("nome", apiService.extrairNome(novoTicket));
-                session.setAttribute("role", apiService.extrairRole(novoTicket));
-                session.setAttribute("primeiroAcesso", apiService.extrairPrimeiroAcesso(novoTicket));
-                session.setAttribute("userId", apiService.extrairUserId(novoTicket));
+                session.setAttribute("nome", authApiService.extrairNome(novoTicket));
+                session.setAttribute("role", authApiService.extrairRole(novoTicket));
+                session.setAttribute("primeiroAcesso", authApiService.extrairPrimeiroAcesso(novoTicket));
+                session.setAttribute("userId", authApiService.extrairUserId(novoTicket));
             }
 
             redirectAttributes.addFlashAttribute("mensagemSucesso", "Dados atualizados com sucesso!");

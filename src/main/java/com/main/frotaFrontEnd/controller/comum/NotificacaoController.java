@@ -1,6 +1,6 @@
-package com.main.frotaFrontEnd.controller;
+package com.main.frotaFrontEnd.controller.comum;
 
-import com.main.frotaFrontEnd.service.ApiService;
+import com.main.frotaFrontEnd.service.NotificacaoApiService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -16,7 +16,7 @@ import java.util.Map;
 public class NotificacaoController {
 
     @Autowired
-    private ApiService apiService;
+    private NotificacaoApiService notificacaoApiService;
 
     @GetMapping
     public String listarNotificacoes(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
@@ -26,13 +26,13 @@ public class NotificacaoController {
             return "redirect:/login";
         }
         try {
-            List<Map<String, Object>> notificacoes = apiService.listarNotificacoes(token);
+            List<Map<String, Object>> notificacoes = notificacaoApiService.listarNotificacoes(token);
             model.addAttribute("notificacoes", notificacoes != null ? notificacoes : List.of());
         } catch (Exception e) {
             model.addAttribute("notificacoes", List.of());
             model.addAttribute("errorMessage", "Erro ao carregar notificações.");
         }
-        return "lista-notificacoes";
+        return "comum/lista-notificacoes";
     }
 
     @PostMapping("/{id}/lida")
@@ -41,7 +41,7 @@ public class NotificacaoController {
         if (token == null) return "redirect:/login";
 
         try {
-            apiService.marcarNotificacaoLida(id, token);
+            notificacaoApiService.marcarNotificacaoLida(id, token);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Erro ao atualizar notificação.");
         }
@@ -54,7 +54,7 @@ public class NotificacaoController {
         if (token == null) return "redirect:/login";
 
         try {
-            apiService.removerNotificacao(id, token);
+            notificacaoApiService.removerNotificacao(id, token);
             redirectAttributes.addFlashAttribute("mensagemSucesso", "Notificação removida com sucesso.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Erro ao remover notificação.");

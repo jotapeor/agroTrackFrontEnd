@@ -1,12 +1,14 @@
-package com.main.frotaFrontEnd.controller;
+package com.main.frotaFrontEnd.controller.gestor;
 
-import com.main.frotaFrontEnd.service.ApiService;
+import com.main.frotaFrontEnd.service.ColaboradorApiService;
+import com.main.frotaFrontEnd.service.MaquinaApiService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.HashSet;
@@ -18,7 +20,9 @@ import java.util.Set;
 public class ColaboradorController {
 
     @Autowired
-    private ApiService apiService;
+    private ColaboradorApiService colaboradorApiService;
+    @Autowired
+    private MaquinaApiService maquinaApiService;
 
     @GetMapping("/colaboradores")
     public String listar(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
@@ -29,7 +33,7 @@ public class ColaboradorController {
         String token = (String) session.getAttribute("token");
         Long meuId = (Long) session.getAttribute("userId");
         try {
-            List<Map<String, Object>> colaboradores = apiService.listarColaboradores(token);
+            List<Map<String, Object>> colaboradores = colaboradorApiService.listarColaboradores(token);
             if (meuId != null && colaboradores != null) {
                 colaboradores = colaboradores.stream()
                         .filter(c -> {
@@ -46,7 +50,7 @@ public class ColaboradorController {
             model.addAttribute("colaboradores", List.of());
             model.addAttribute("roleLogado", session.getAttribute("role"));
         }
-        return "lista-colaboradores";
+        return "gestor/lista-colaboradores";
     }
 
     @GetMapping("/colaboradores/editar/{id}")
@@ -63,7 +67,7 @@ public class ColaboradorController {
         String token = (String) session.getAttribute("token");
         String role = (String) session.getAttribute("role");
         try {
-            Map<String, Object> colaborador = apiService.buscarColaborador(id, token);
+            Map<String, Object> colaborador = colaboradorApiService.buscarColaborador(id, token);
 
             if ("SOCIO".equals(role) && !"OPERADOR".equals(colaborador.get("perfil"))) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Você só pode editar contas de operador.");
@@ -73,7 +77,7 @@ public class ColaboradorController {
             model.addAttribute("colaborador", colaborador);
             model.addAttribute("roleLogado", role);
 
-            List<Map<String, Object>> maquinas = apiService.listarMaquinas(token);
+            List<Map<String, Object>> maquinas = maquinaApiService.listarMaquinas(token);
             if (maquinas != null) {
                 for (Map<String, Object> m : maquinas) {
                     Object idObj = m.get("id");
@@ -84,7 +88,7 @@ public class ColaboradorController {
             }
             model.addAttribute("maquinas", maquinas != null ? maquinas : List.of());
 
-            List<?> rawIds = apiService.listarMaquinasVinculadas(id, token);
+            List<?> rawIds = colaboradorApiService.listarMaquinasVinculadas(id, token);
             Set<Long> idsVinculados = new HashSet<>();
             if (rawIds != null) {
                 for (Object x : rawIds) {
@@ -96,7 +100,7 @@ public class ColaboradorController {
             redirectAttributes.addFlashAttribute("errorMessage", "Colaborador não encontrado.");
             return "redirect:/colaboradores";
         }
-        return "editar-colaborador";
+        return "gestor/editar-colaborador";
     }
 
     @PostMapping("/colaboradores/editar/{id}")
@@ -105,6 +109,7 @@ public class ColaboradorController {
                                @RequestParam("email") String email,
                                @RequestParam("perfil") String perfil,
                                @RequestParam(value = "ativo", defaultValue = "true") String ativo,
+                               @RequestParam(value = "foto", required = false) MultipartFile foto,
                                HttpSession session,
                                RedirectAttributes redirectAttributes) {
         if (!isProprietarioOuSocio(session)) {
@@ -124,7 +129,7 @@ public class ColaboradorController {
         }
 
         try {
-            apiService.atualizarColaborador(id, Map.of("nome", nome, "email", email, "perfil", perfil, "ativo", ativo), token);
+            colaboradorApiService.atualizarColaborador(id, nome, email, perfil, ativo, foto, token);
             redirectAttributes.addFlashAttribute("mensagemSucesso", "Colaborador atualizado com sucesso!");
             return "redirect:/colaboradores";
         } catch (HttpStatusCodeException ex) {
@@ -150,7 +155,7 @@ public class ColaboradorController {
 
         if ("SOCIO".equals(role)) {
             try {
-                Map<String, Object> colaborador = apiService.buscarColaborador(id, token);
+                Map<String, Object> colaborador = colaboradorApiService.buscarColaborador(id, token);
                 if (!"OPERADOR".equals(colaborador.get("perfil"))) {
                     redirectAttributes.addFlashAttribute("errorMessage", "Você só pode vincular máquinas a operadores.");
                     return "redirect:/colaboradores/editar/" + id;
@@ -163,7 +168,7 @@ public class ColaboradorController {
 
         try {
             if (idsMaquinas == null) idsMaquinas = List.of();
-            apiService.vincularMaquinas(id, idsMaquinas, token);
+            colaboradorApiService.vincularMaquinas(id, idsMaquinas, token);
             redirectAttributes.addFlashAttribute("mensagemSucesso", "Vínculos atualizados com sucesso!");
         } catch (HttpStatusCodeException ex) {
             String msg = extrairMensagemErro(ex.getResponseBodyAsString());
@@ -184,7 +189,7 @@ public class ColaboradorController {
         }
         String token = (String) session.getAttribute("token");
         try {
-            apiService.excluirColaborador(id, token);
+            colaboradorApiService.excluirColaborador(id, token);
             redirectAttributes.addFlashAttribute("mensagemSucesso", "Colaborador excluído com sucesso!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Erro ao excluir colaborador.");

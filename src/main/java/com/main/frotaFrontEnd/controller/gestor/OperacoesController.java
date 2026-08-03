@@ -1,11 +1,13 @@
-package com.main.frotaFrontEnd.controller;
+package com.main.frotaFrontEnd.controller.gestor;
 
-import com.main.frotaFrontEnd.service.ApiService;
+import com.main.frotaFrontEnd.service.OperacaoApiService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.Map;
@@ -13,10 +15,10 @@ import java.util.Map;
 @Controller
 public class OperacoesController {
 
-    private final ApiService apiService;
+    private final OperacaoApiService operacaoApiService;
 
-    public OperacoesController(ApiService apiService) {
-        this.apiService = apiService;
+    public OperacoesController(OperacaoApiService operacaoApiService) {
+        this.operacaoApiService = operacaoApiService;
     }
 
     @GetMapping("/operacoes")
@@ -34,30 +36,30 @@ public class OperacoesController {
         }
 
         try {
-            List<Map<String, Object>> operacoes = apiService.listarTelemetriaEmOperacao(token);
+            List<Map<String, Object>> operacoes = operacaoApiService.listarTelemetriaEmOperacao(token);
             model.addAttribute("operacoes", operacoes);
-            return "operacoes";
+            return "gestor/operacoes";
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Erro ao carregar operações.");
-            return "dashboard";
+            return "comum/dashboard";
         }
     }
 
     @GetMapping("/api/operacoes/data")
-    @org.springframework.web.bind.annotation.ResponseBody
-    public org.springframework.http.ResponseEntity<?> pollingOperacoes(HttpSession session) {
+    @ResponseBody
+    public ResponseEntity<?> pollingOperacoes(HttpSession session) {
         String token = (String) session.getAttribute("token");
         String role = (String) session.getAttribute("role");
 
         if (token == null || (!"PROPRIETARIO".equals(role) && !"SOCIO".equals(role))) {
-            return org.springframework.http.ResponseEntity.status(403).build();
+            return ResponseEntity.status(403).build();
         }
 
         try {
-            List<Map<String, Object>> operacoes = apiService.listarTelemetriaEmOperacao(token);
-            return org.springframework.http.ResponseEntity.ok(operacoes);
+            List<Map<String, Object>> operacoes = operacaoApiService.listarTelemetriaEmOperacao(token);
+            return ResponseEntity.ok(operacoes);
         } catch (Exception e) {
-            return org.springframework.http.ResponseEntity.status(500).build();
+            return ResponseEntity.status(500).build();
         }
     }
 }

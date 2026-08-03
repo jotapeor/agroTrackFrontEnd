@@ -1,9 +1,9 @@
-package com.main.frotaFrontEnd.controller;
+package com.main.frotaFrontEnd.controller.auth;
 
-import com.main.frotaFrontEnd.service.ApiService;
+import com.main.frotaFrontEnd.service.AuthApiService;
+import com.main.frotaFrontEnd.service.RelatorioApiService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,12 +17,14 @@ import java.util.Map;
 @Controller
 public class AuthController {
     @Autowired
-    private ApiService restService;
+    private AuthApiService authApiService;
+    @Autowired
+    private RelatorioApiService relatorioApiService;
 
     @GetMapping("/")
     public String home(HttpSession session) {
         if (session.getAttribute("token") != null) return "redirect:/dashboard";
-        return "home";
+        return "auth/home";
     }
 
     @GetMapping("/dashboard")
@@ -34,7 +36,7 @@ public class AuthController {
         model.addAttribute("primeiroAcesso", session.getAttribute("primeiroAcesso"));
 
         try {
-            Map<String, Object> dadosDashboard = restService.obterDashboard(token);
+            Map<String, Object> dadosDashboard = relatorioApiService.obterDashboard(token);
             model.addAttribute("dashboard", dadosDashboard);
         } catch (Exception e) {
             model.addAttribute("dashboard", Map.of(
@@ -45,7 +47,7 @@ public class AuthController {
             ));
         }
 
-        return "dashboard";
+        return "comum/dashboard";
     }
 
     @GetMapping("/api/dashboard/data")
@@ -54,7 +56,7 @@ public class AuthController {
         String token = (String) session.getAttribute("token");
         if (token == null) return ResponseEntity.status(401).build();
         try {
-            return ResponseEntity.ok(restService.obterDashboard(token));
+            return ResponseEntity.ok(relatorioApiService.obterDashboard(token));
         } catch (Exception e) {
             return ResponseEntity.status(500).build();
         }
@@ -62,19 +64,19 @@ public class AuthController {
 
     @GetMapping("/login")
     public String login() {
-        return "login";
+        return "auth/login";
     }
 
     @PostMapping("/logar")
     public String logar(@RequestParam String email, @RequestParam String senha, RedirectAttributes redirectAttributes, HttpSession session) {
         try {
-            String token = restService.logar(email, senha);
+            String token = authApiService.logar(email, senha);
             session.setAttribute("token", token);
-            session.setAttribute("role", restService.extrairRole(token));
+            session.setAttribute("role", authApiService.extrairRole(token));
             session.setAttribute("email", email);
-            session.setAttribute("primeiroAcesso", restService.extrairPrimeiroAcesso(token));
-            session.setAttribute("nome", restService.extrairNome(token));
-            session.setAttribute("userId", restService.extrairUserId(token));
+            session.setAttribute("primeiroAcesso", authApiService.extrairPrimeiroAcesso(token));
+            session.setAttribute("nome", authApiService.extrairNome(token));
+            session.setAttribute("userId", authApiService.extrairUserId(token));
             return "redirect:/dashboard";
         } catch (HttpStatusCodeException ex) {
             try {
@@ -100,7 +102,7 @@ public class AuthController {
     @ResponseBody
     public ResponseEntity<Map<String, Boolean>> verificarEmail(@RequestParam("email") String email) {
         try {
-            return ResponseEntity.ok(restService.verificarEmail(email));
+            return ResponseEntity.ok(authApiService.verificarEmail(email));
         } catch (Exception e) {
             return ResponseEntity.ok(Map.of("disponivel", true));
         }
@@ -112,7 +114,7 @@ public class AuthController {
         String token = (String) session.getAttribute("token");
         if (token == null) return ResponseEntity.status(401).body("Sessão expirada.");
         try {
-            restService.alterarSenha(body.get("senha"), token);
+            authApiService.alterarSenha(body.get("senha"), token);
             session.setAttribute("primeiroAcesso", "false");
             return ResponseEntity.ok("Senha alterada com sucesso.");
         } catch (HttpStatusCodeException ex) {
