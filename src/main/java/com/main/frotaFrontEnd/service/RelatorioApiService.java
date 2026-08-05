@@ -45,7 +45,7 @@ public class RelatorioApiService {
     }
 
     @SuppressWarnings("unchecked")
-    public java.util.Map<String, Long> relatorioRisco(String inicio, String fim, String token) {
+    public java.util.Map<String, Object> relatorioRisco(String inicio, String fim, String token) {
         String url = "/relatorios/risco-distribuicao";
         if (inicio != null && !inicio.isEmpty() && fim != null && !fim.isEmpty()) {
             url += "?dataInicio=" + inicio + "&dataFim=" + fim;

@@ -70,7 +70,7 @@ public class RelatorioController {
 
     @GetMapping("/api/front/relatorios/risco-distribuicao")
     @ResponseBody
-    public Map<String, Long> riscoDistribuicao(
+    public Map<String, Object> riscoDistribuicao(
             @RequestParam(required = false) String dataInicio,
             @RequestParam(required = false) String dataFim,
             HttpSession session) {
