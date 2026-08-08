@@ -297,7 +297,7 @@ public class MaquinaController {
         try {
             Map<String, Object> resumo = operacaoApiService.trocarStatusMaquina(id, novoStatus, confirmacao, pesoCarregado, hodometroFim, observacoes, motivo, pesoFinal, token);
             redirectAttributes.addFlashAttribute("mensagemSucesso", "Status atualizado com sucesso!");
-            if (resumo != null && !resumo.isEmpty()) {
+            if (resumo != null && resumo.containsKey("nomeOperador")) {
                 redirectAttributes.addFlashAttribute("resumoOperacao", resumo);
                 return "redirect:/maquinas/" + id + "/status";
             }

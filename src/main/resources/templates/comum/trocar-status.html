@@ -53,21 +53,21 @@
                     <h2 class="at-card-title"><i class="bi bi-clipboard-check"></i> Resumo do Encerramento</h2>
                 </div>
                 <div class="at-card-body">
-                    <p><strong>Operador:</strong> <span th:text="${resumoOperacao.nomeOperador}"></span></p>
-                    <p><strong>Início:</strong> <span th:text="${#strings.substring(resumoOperacao.dataInicio, 0, 16).replace('T', ' ')}"></span></p>
-                    <p><strong>Fim:</strong> <span th:text="${#strings.substring(resumoOperacao.dataFim, 0, 16).replace('T', ' ')}"></span></p>
-                    <p><strong>Horas Operadas:</strong> <span th:text="${resumoOperacao.horasOperadas} + ' h'"></span></p>
-                    <p><strong>Km Rodados:</strong> <span th:text="${resumoOperacao.kmRodados}"></span></p>
-                    <p><strong>Peso Carregado:</strong> <span th:text="${resumoOperacao.pesoCarregado != null ? resumoOperacao.pesoCarregado : 'N/A'}"></span></p>
-                    <p th:if="${resumoOperacao.pesoFinal != null}"><strong>Peso Colhido:</strong> <span th:text="${resumoOperacao.pesoFinal} + ' kg'"></span></p>
-                    <p><strong>Observações:</strong> <span th:text="${resumoOperacao.observacoes != null ? resumoOperacao.observacoes : '—'}"></span></p>
+                    <p><strong>Operador:</strong> <span th:text="${resumoOperacao['nomeOperador']}"></span></p>
+                    <p><strong>Início:</strong> <span th:text="${#strings.replace(#strings.substring(resumoOperacao['dataInicio'], 0, 16), 'T', ' ')}"></span></p>
+                    <p><strong>Fim:</strong> <span th:text="${#strings.replace(#strings.substring(resumoOperacao['dataFim'], 0, 16), 'T', ' ')}"></span></p>
+                    <p><strong>Horas Operadas:</strong> <span th:text="${resumoOperacao['horasOperadas']} + ' h'"></span></p>
+                    <p><strong>Km Rodados:</strong> <span th:text="${resumoOperacao['kmRodados']}"></span></p>
+                    <p><strong>Peso Carregado:</strong> <span th:text="${resumoOperacao['pesoCarregado'] != null ? resumoOperacao['pesoCarregado'] : 'N/A'}"></span></p>
+                    <p th:if="${resumoOperacao['pesoFinal'] != null}"><strong>Peso Colhido:</strong> <span th:text="${resumoOperacao['pesoFinal']} + ' kg'"></span></p>
+                    <p><strong>Observações:</strong> <span th:text="${resumoOperacao['observacoes'] != null ? resumoOperacao['observacoes'] : '—'}"></span></p>
                     <hr style="margin: 12px 0; border: none; border-top: 1px solid var(--at-border);">
-                    <p><strong>Combustível Abastecido na Operação:</strong> <span th:text="${resumoOperacao.consumoEstimadoOperacao != null ? resumoOperacao.consumoEstimadoOperacao + ' L' : 'Sem dados'}"></span></p>
-                    <div th:if="${resumoOperacao.alertasGerados != null and !#lists.isEmpty(resumoOperacao.alertasGerados)}" style="margin-top: 16px;">
+                    <p><strong>Combustível Abastecido na Operação:</strong> <span th:text="${resumoOperacao['consumoEstimadoOperacao'] != null ? resumoOperacao['consumoEstimadoOperacao'] + ' L' : 'Sem dados'}"></span></p>
+                    <div th:if="${resumoOperacao['alertasGerados'] != null and !#lists.isEmpty(resumoOperacao['alertasGerados'])}" style="margin-top: 16px;">
                         <h4 style="margin-bottom: 8px; color: var(--at-danger);"><i class="bi bi-exclamation-triangle"></i> Alertas Gerados</h4>
                         <ul style="list-style: none; padding-left: 0;">
-                            <li th:each="alerta : ${resumoOperacao.alertasGerados}" style="background: #fff3cd; color: #856404; padding: 8px; border-radius: 4px; margin-bottom: 4px; border: 1px solid #ffeeba;">
-                                <strong th:text="${alerta.tipo}"></strong>: <span th:text="${alerta.mensagem}"></span>
+                            <li th:each="alerta : ${resumoOperacao['alertasGerados']}" style="background: #fff3cd; color: #856404; padding: 8px; border-radius: 4px; margin-bottom: 4px; border: 1px solid #ffeeba;">
+                                <strong th:text="${alerta['tipo']}"></strong>: <span th:text="${alerta['mensagem']}"></span>
                             </li>
                         </ul>
                     </div>
@@ -152,8 +152,8 @@
                                     <select id="novoStatusA" name="novoStatus" class="at-form-control at-form-select" required onchange="toggleMotivoEncerrar(this.value)">
                                         <option value="">Selecione o novo status...</option>
                                         <option value="Disponivel">Disponível</option>
-                                        <option value="Em Manutencao">Em Manutenção</option>
-                                        <option value="Inativa">Inativa</option>
+                                        <option th:if="${session.role == 'PROPRIETARIO' or session.role == 'SOCIO'}" value="Em Manutencao">Em Manutenção</option>
+                                        <option th:if="${session.role == 'PROPRIETARIO' or session.role == 'SOCIO'}" value="Inativa">Inativa</option>
                                     </select>
                                 </div>
 
