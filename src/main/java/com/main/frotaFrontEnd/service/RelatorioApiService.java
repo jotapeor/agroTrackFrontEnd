@@ -58,7 +58,7 @@ public class RelatorioApiService {
     }
 
     @SuppressWarnings("unchecked")
-    public java.util.Map<String, Long> relatorioOrdensPorStatus(String inicio, String fim, String token) {
+    public java.util.Map<String, Object> relatorioOrdensPorStatus(String inicio, String fim, String token) {
         String url = "/relatorios/ordens-por-status";
         if (inicio != null && !inicio.isEmpty() && fim != null && !fim.isEmpty()) {
             url += "?dataInicio=" + inicio + "&dataFim=" + fim;
