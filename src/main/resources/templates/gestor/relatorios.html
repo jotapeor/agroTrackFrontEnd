@@ -76,6 +76,7 @@
                 <div class="at-card fade-in delay-2" style="padding: 24px;">
                     <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 24px; color: #1e293b; display: flex; align-items: center; gap: 12px;"><i class="bi bi-fuel-pump" style="color: #4f46e5; background: #eef2ff; padding: 10px; border-radius: 12px; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.1);"></i> Consumo Total por Máquina no Período (Litros)</h3>
                     <div class="chart-wrapper">
+                        <div id="msgConsumo" style="display:none; text-align:center; padding:24px; color:var(--at-text-muted);"></div>
                         <canvas id="chartConsumo"></canvas>
                     </div>
                 </div>
@@ -84,6 +85,7 @@
                     <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 24px; color: #1e293b; display: flex; align-items: center; gap: 12px;"><i class="bi bi-shield-exclamation" style="color: #4f46e5; background: #eef2ff; padding: 10px; border-radius: 12px; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.1);"></i> Distribuição de Risco Atual das Máquinas</h3>
                     <small style="color:var(--at-text-muted);">Reflete o estado atual, sem filtro de data</small>
                     <div class="chart-wrapper" style="margin-top: 16px;">
+                        <div id="msgRisco" style="display:none; text-align:center; padding:24px; color:var(--at-text-muted);"></div>
                         <canvas id="chartRisco"></canvas>
                     </div>
                 </div>
@@ -91,6 +93,7 @@
                 <div class="at-card fade-in delay-4" style="padding: 24px;">
                     <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 24px; color: #1e293b; display: flex; align-items: center; gap: 12px;"><i class="bi bi-tools" style="color: #4f46e5; background: #eef2ff; padding: 10px; border-radius: 12px; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.1);"></i> Volume de Manutenções</h3>
                     <div class="chart-wrapper">
+                        <div id="msgOrdens" style="display:none; text-align:center; padding:24px; color:var(--at-text-muted);"></div>
                         <canvas id="chartOrdens"></canvas>
                     </div>
                 </div>
@@ -98,6 +101,7 @@
                 <div class="at-card fade-in delay-5" style="padding: 24px;">
                     <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 24px; color: #1e293b; display: flex; align-items: center; gap: 12px;"><i class="bi bi-activity" style="color: #4f46e5; background: #eef2ff; padding: 10px; border-radius: 12px; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.1);"></i> Linha do Tempo de Ocorrências</h3>
                     <div class="chart-wrapper">
+                        <div id="msgAlertas" style="display:none; text-align:center; padding:24px; color:var(--at-text-muted);"></div>
                         <canvas id="chartAlertas"></canvas>
                     </div>
                 </div>
@@ -106,6 +110,7 @@
             <div class="at-card fade-in delay-5" style="padding: 24px;">
                 <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 24px; color: #1e293b; display: flex; align-items: center; gap: 12px;"><i class="bi bi-bar-chart-steps" style="color: #4f46e5; background: #eef2ff; padding: 10px; border-radius: 12px; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.1);"></i> Desempenho: Horas Operadas vs Km Rodados</h3>
                 <div class="chart-wrapper" style="min-height: 350px;">
+                    <div id="msgHorasKm" style="display:none; text-align:center; padding:24px; color:var(--at-text-muted);"></div>
                     <canvas id="chartHorasKm"></canvas>
                 </div>
             </div>
@@ -133,6 +138,24 @@
     let chartOrdensInstance = null;
     let chartAlertasInstance = null;
     let chartHorasKmInstance = null;
+
+    function mostrarMensagemGrafico(msgId, canvasId, mensagem, isErro) {
+        const msg = document.getElementById(msgId);
+        const canvas = document.getElementById(canvasId);
+        if (msg) {
+            msg.textContent = mensagem;
+            msg.style.color = isErro ? 'var(--at-danger)' : 'var(--at-text-muted)';
+            msg.style.display = 'block';
+        }
+        if (canvas) canvas.style.display = 'none';
+    }
+
+    function esconderMensagemGrafico(msgId, canvasId) {
+        const msg = document.getElementById(msgId);
+        const canvas = document.getElementById(canvasId);
+        if (msg) msg.style.display = 'none';
+        if (canvas) canvas.style.display = 'block';
+    }
 
     document.addEventListener("DOMContentLoaded", () => {
         const hoje = new Date();
@@ -166,6 +189,7 @@
     }
 
     function loadConsumo() {
+        esconderMensagemGrafico('msgConsumo', 'chartConsumo');
         fetch('/api/front/relatorios/consumo-por-maquina' + getQueryParams())
             .then(res => {
                 if (!res.ok) throw new Error('Erro ' + res.status);
@@ -173,8 +197,7 @@
             })
             .then(data => {
                 if (!Array.isArray(data) || data.length === 0) {
-                    document.getElementById('chartConsumo').parentElement.innerHTML =
-                        '<p style="text-align:center;color:var(--at-text-muted);padding:24px;">Sem dados para o período selecionado.</p>';
+                    mostrarMensagemGrafico('msgConsumo', 'chartConsumo', 'Sem dados para o período selecionado.', false);
                     return;
                 }
 
@@ -213,12 +236,12 @@
                 });
             })
             .catch(err => {
-                document.getElementById('chartConsumo').parentElement.innerHTML =
-                    '<p style="text-align:center;color:var(--at-danger);padding:24px;">Erro ao carregar dados de consumo.</p>';
+                mostrarMensagemGrafico('msgConsumo', 'chartConsumo', 'Erro ao carregar dados de consumo.', true);
             });
     }
 
     function loadRisco() {
+        esconderMensagemGrafico('msgRisco', 'chartRisco');
         fetch('/api/front/relatorios/risco-distribuicao' + getQueryParams())
             .then(res => {
                 if (!res.ok) throw new Error('Erro ' + res.status);
@@ -228,8 +251,7 @@
                 const isError = data && data.timestamp && data.status && data.path;
                 if (isError) throw new Error('Backend error: ' + data.message);
                 if (!data || Object.keys(data).length === 0) {
-                    document.getElementById('chartRisco').parentElement.innerHTML =
-                        '<p style="text-align:center;color:var(--at-text-muted);padding:24px;">Sem dados de risco disponíveis.</p>';
+                    mostrarMensagemGrafico('msgRisco', 'chartRisco', 'Sem dados de risco disponíveis.', false);
                     return;
                 }
 
@@ -267,12 +289,12 @@
                 });
             })
             .catch(err => {
-                document.getElementById('chartRisco').parentElement.innerHTML =
-                    '<p style="text-align:center;color:var(--at-danger);padding:24px;">Erro ao carregar dados de risco.</p>';
+                mostrarMensagemGrafico('msgRisco', 'chartRisco', 'Erro ao carregar dados de risco.', true);
             });
     }
 
     function loadOrdens() {
+        esconderMensagemGrafico('msgOrdens', 'chartOrdens');
         fetch('/api/front/relatorios/ordens-por-status' + getQueryParams())
             .then(res => {
                 if (!res.ok) throw new Error('Erro ' + res.status);
@@ -282,8 +304,7 @@
                 const isError = data && data.timestamp && data.status && data.path;
                 if (isError) throw new Error('Backend error: ' + data.message);
                 if (!data || Object.keys(data).length === 0) {
-                    document.getElementById('chartOrdens').parentElement.innerHTML =
-                        '<p style="text-align:center;color:var(--at-text-muted);padding:24px;">Sem ordens para o período selecionado.</p>';
+                    mostrarMensagemGrafico('msgOrdens', 'chartOrdens', 'Sem ordens para o período selecionado.', false);
                     return;
                 }
 
@@ -314,12 +335,12 @@
                 });
             })
             .catch(err => {
-                document.getElementById('chartOrdens').parentElement.innerHTML =
-                    '<p style="text-align:center;color:var(--at-danger);padding:24px;">Erro ao carregar dados de manutenções.</p>';
+                mostrarMensagemGrafico('msgOrdens', 'chartOrdens', 'Erro ao carregar dados de manutenções.', true);
             });
     }
 
     function loadAlertas() {
+        esconderMensagemGrafico('msgAlertas', 'chartAlertas');
         fetch('/api/front/relatorios/alertas-timeline' + getQueryParams())
             .then(res => {
                 if (!res.ok) throw new Error('Erro ' + res.status);
@@ -328,8 +349,7 @@
             .then(data => {
                 if (!Array.isArray(data)) throw new Error('Resposta inválida');
                 if (data.length === 0) {
-                    document.getElementById('chartAlertas').parentElement.innerHTML =
-                        '<p style="text-align:center;color:var(--at-text-muted);padding:24px;">Sem ocorrências para o período selecionado.</p>';
+                    mostrarMensagemGrafico('msgAlertas', 'chartAlertas', 'Sem ocorrências para o período selecionado.', false);
                     return;
                 }
                 const datesSet = new Set(data.map(d => d.data));
@@ -390,15 +410,22 @@
                 });
             })
             .catch(err => {
-                document.getElementById('chartAlertas').parentElement.innerHTML =
-                    '<p style="text-align:center;color:var(--at-danger);padding:24px;">Erro ao carregar linha do tempo de ocorrências.</p>';
+                mostrarMensagemGrafico('msgAlertas', 'chartAlertas', 'Erro ao carregar linha do tempo de ocorrências.', true);
             });
     }
 
     function loadHorasKm() {
+        esconderMensagemGrafico('msgHorasKm', 'chartHorasKm');
         fetch('/api/front/relatorios/horas-km' + getQueryParams(true))
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error('Erro ' + res.status);
+                return res.json();
+            })
             .then(data => {
+                if (!Array.isArray(data) || data.length === 0) {
+                    mostrarMensagemGrafico('msgHorasKm', 'chartHorasKm', 'Sem dados para o período selecionado.', false);
+                    return;
+                }
                 const labels = data.map(d => d.nomeMaquina + " (" + d.nomeOperador + ")");
                 const horas = data.map(d => d.totalHoras);
                 const kms = data.map(d => d.totalKm);
@@ -450,6 +477,9 @@
                         }
                     }
                 });
+            })
+            .catch(err => {
+                mostrarMensagemGrafico('msgHorasKm', 'chartHorasKm', 'Erro ao carregar dados de desempenho.', true);
             });
     }
 

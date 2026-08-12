@@ -86,7 +86,7 @@ public class RelatorioController {
 
     @GetMapping("/api/front/relatorios/ordens-por-status")
     @ResponseBody
-    public Map<String, Long> ordensPorStatus(
+    public Map<String, Object> ordensPorStatus(
             @RequestParam(required = false) String dataInicio,
             @RequestParam(required = false) String dataFim,
             HttpSession session) {
